@@ -45,8 +45,8 @@ public class GenericApiResource {
                                 @QueryParam("page") Integer page,
                                 @QueryParam("per_page") Integer perPage,
                                 @QueryParam("show") List<String> show) {
-        final OptionalInt pageOptional = page == null ? OptionalInt.empty() : OptionalInt.of(page);
-        final OptionalInt perPageOptional = perPage == null ? OptionalInt.empty() : OptionalInt.of(perPage);
+        final OptionalInt pageOptional = Optional.ofNullable(page).map(OptionalInt::of).orElseGet(OptionalInt::empty);
+        final OptionalInt perPageOptional = Optional.ofNullable(perPage).map(OptionalInt::of).orElseGet(OptionalInt::empty);
         final ApiResponse apiResponse = getResponse(uri, pageOptional, perPageOptional, show.toArray(new String[show.size()]));
         if (apiResponse == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -78,8 +78,7 @@ public class GenericApiResource {
         Preconditions.checkNotNull(uri, "the URI may not be null");
         Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
 
-        final String[] urlParts = uri.split("/");
-        return getResponse(urlParts, null, page, perPage, extensions);
+        return getResponse(uri.split("/"), null, page, perPage, extensions);
     }
 
     /**
@@ -100,7 +99,7 @@ public class GenericApiResource {
         final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> r.name().equals(groupName)).findAny();
 
         if (resolver.isPresent()) {
-            return getGroupResponse(addresses, parent, page, perPage, groupName, resolver.get(), extensions);
+            return getGroupResponse(addresses, parent, page, perPage, resolver.get(), extensions);
         } else {
             final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> r.name().equals(groupName)).findAny();
             if (parent != null && extensionResolver.isPresent()) {
@@ -122,17 +121,12 @@ public class GenericApiResource {
      * @param parent     the parent element or {@code null} at the root of the resource graph
      * @param page       the optional page
      * @param perPage    the optional per page limit
-     * @param groupName  the group name within the selection
      * @param resolver   the resolver for the group with the specified {@code groupName}
      * @param extensions an array of all requested extensions
      * @return the response
      */
-    private ApiResponse getGroupResponse(String[] addresses, Element parent, OptionalInt page, OptionalInt perPage, String groupName, GroupResolver resolver, String... extensions) {
-        // Unique by URL concept: group/element/group/element/...
-        final boolean uniqueElement = addresses.length >= 2;
-
-        final Filters filters = initializeFilters(addresses, page, perPage);
-        final Group group = resolver.elements(parent, filters);
+    private ApiResponse getGroupResponse(String[] addresses, Element parent, OptionalInt page, OptionalInt perPage, GroupResolver resolver, String... extensions) {
+        final Group group = resolver.elements(parent, initializeFilters(addresses, page, perPage));
 
         final Multimap<Element, Extension> extensionMultimap = HashMultimap.create();
         for (final String extension : extensions) {
@@ -145,28 +139,31 @@ public class GenericApiResource {
             }
         }
 
-        final String[] nextUri;
+        final String[] restOfUri;
         if (addresses.length > 2) {
-            nextUri = Arrays.copyOfRange(addresses, 2, addresses.length);
+            restOfUri = Arrays.copyOfRange(addresses, 2, addresses.length);
         } else {
-            nextUri = new String[0];
+            restOfUri = new String[0];
         }
+
+        // Unique by URL concept: group/element/group/element/...
+        final boolean uniqueElement = addresses.length >= 2;
 
         if (uniqueElement) {
             if (group != null && !group.elements().isEmpty()) {
                 final Element element = group.elements().get(0);
-                return ApiResponse.create(getExtendedJsonStructure(nextUri, element, extensions, extensionMultimap.get(element)), element.lastModified());
+                return ApiResponse.create(getExtendedJsonStructure(restOfUri, element, extensions, extensionMultimap.get(element)), element.lastModified());
             } else {
                 return null;
             }
         } else {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for (final Element element : group.elements()) {
-                arrayBuilder.add(getExtendedJsonStructure(nextUri, element, extensions, extensionMultimap.get(element)));
+                arrayBuilder.add(getExtendedJsonStructure(restOfUri, element, extensions, extensionMultimap.get(element)));
             }
 
             if (resolver.defaultPageSize() > 0) {
-                final ApiResourcePaging paging = ApiResourcePaging.builder().group(groupName).page(page.orElse(1)).perPage(perPage.orElse(resolver.defaultPageSize())).total(group.total()).build();
+                final ApiResourcePaging paging = ApiResourcePaging.builder().group(addresses[0]).page(page.orElse(1)).perPage(perPage.orElse(resolver.defaultPageSize())).total(group.total()).build();
                 return ApiResponse.create(arrayBuilder.build(), group.lastModified(), paging);
             }
             return ApiResponse.create(arrayBuilder.build(), group.lastModified());
@@ -227,7 +224,7 @@ public class GenericApiResource {
      * @param perPage   the optional per page limit
      * @return the list of all filters specified for the resolver
      */
-    private Filters initializeFilters(String[] addresses, OptionalInt page, OptionalInt perPage) {
+    private Filters initializeFilters(final String[] addresses, final OptionalInt page, final OptionalInt perPage) {
         final Filters.Builder builder = Filters.Builder.initialize();
 
         if (addresses.length == 1 && (page.isPresent() || perPage.isPresent())) {
