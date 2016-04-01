@@ -149,4 +149,10 @@ public class GenericApiResourceTest {
         assertEquals(response.getHeaderString("Last-Modified"), "1994-02-04T15:09:45Z");
     }
 
+    @Test
+    public void testResponseOfNonExistingResource() {
+        final Response response = apiResource.getResource("users/rick.grimes", null, null, Collections.emptyList());
+
+        assertEquals(response.getStatus(), 404);
+    }
 }

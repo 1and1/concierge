@@ -46,6 +46,9 @@ public class GenericApiResource {
                                 @QueryParam("per_page") Integer perPage,
                                 @QueryParam("show") List<String> show) {
         final ApiResponse apiResponse = getResponse(uri, Optional.ofNullable(page), Optional.ofNullable(perPage), show.toArray(new String[show.size()]));
+        if (apiResponse == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
         final JsonStructure jsonResponse = apiResponse.getObject();
         if (jsonResponse != null) {
             final Response.ResponseBuilder responseBuilder = Response.ok(jsonResponse.toString());
@@ -62,9 +65,9 @@ public class GenericApiResource {
     /**
      * Creates a response for the specified url.
      *
-     * @param url the URL
-     * @param page the optional page
-     * @param perPage the optional per page limit
+     * @param url        the URL
+     * @param page       the optional page
+     * @param perPage    the optional per page limit
      * @param extensions an array of all requested extensions
      * @return the response or null
      */
@@ -79,10 +82,10 @@ public class GenericApiResource {
     /**
      * Returns the JSON representation for the specified {@code addresses} wrapped in a {@link ApiResponse} or {@code null} if no resource could be found for the specified address.
      *
-     * @param addresses the array of addresses
-     * @param parent the parent element or {@code null} at the root of the resource graph
-     * @param page the optional page
-     * @param perPage the optional per page limit
+     * @param addresses  the array of addresses
+     * @param parent     the parent element or {@code null} at the root of the resource graph
+     * @param page       the optional page
+     * @param perPage    the optional per page limit
      * @param extensions an array of all requested extensions
      * @return the response or {@code null}
      */
@@ -112,12 +115,12 @@ public class GenericApiResource {
     /**
      * Returns the response for a {@link Group} or {@link Element}.
      *
-     * @param addresses the array of addresses
-     * @param parent the parent element or {@code null} at the root of the resource graph
-     * @param page the optional page
-     * @param perPage the optional per page limit
-     * @param groupName the group name within the selection
-     * @param resolver the resolver for the group with the specified {@code groupName}
+     * @param addresses  the array of addresses
+     * @param parent     the parent element or {@code null} at the root of the resource graph
+     * @param page       the optional page
+     * @param perPage    the optional per page limit
+     * @param groupName  the group name within the selection
+     * @param resolver   the resolver for the group with the specified {@code groupName}
      * @param extensions an array of all requested extensions
      * @return the response
      */
@@ -147,8 +150,12 @@ public class GenericApiResource {
         }
 
         if (uniqueElement) {
-            final Element element = group.elements().get(0);
-            return ApiResponse.create(getExtendedJsonStructure(nextUrl, element, extensions, extensionMultimap.get(element)), element.lastModified());
+            if (group != null && !group.elements().isEmpty()) {
+                final Element element = group.elements().get(0);
+                return ApiResponse.create(getExtendedJsonStructure(nextUrl, element, extensions, extensionMultimap.get(element)), element.lastModified());
+            } else {
+                return null;
+            }
         } else {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for (final Element element : group.elements()) {
@@ -167,9 +174,9 @@ public class GenericApiResource {
      * Returns the {@link JsonStructure} for the parent element if {@code nextUrl} is empty or else forwards the request to
      * {@link #getResponse(String[], Element, Optional, Optional, String...)} with the current parent element and selects recursively the result of it.
      *
-     * @param nextUrl the optional nexty url
-     * @param parent the parent element
-     * @param extensions an array of all requested extensions
+     * @param nextUrl            the optional nexty url
+     * @param parent             the parent element
+     * @param extensions         an array of all requested extensions
      * @param resolvedExtensions a list of all resolved extensions so far
      * @return the JSON representation for the parent element or the result of a forwarded request
      */
@@ -206,8 +213,8 @@ public class GenericApiResource {
      * Returns a list of all {@link Filter} for the specified {@code resolver}.
      *
      * @param addresses the addresses array
-     * @param page the optional page
-     * @param perPage the optional per page limit
+     * @param page      the optional page
+     * @param perPage   the optional per page limit
      * @return th elist of all filters specified for the resolver
      */
     private Filters initializeFilters(String[] addresses, Optional<Integer> page, Optional<Integer> perPage) {
