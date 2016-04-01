@@ -63,19 +63,19 @@ public class GenericApiResource {
     }
 
     /**
-     * Creates a response for the specified url.
+     * Creates a response for the specified uri.
      *
-     * @param url        the URL
+     * @param uri        the URI
      * @param page       the optional page
      * @param perPage    the optional per page limit
      * @param extensions an array of all requested extensions
      * @return the response or null
      */
-    private ApiResponse getResponse(final String url, final Optional<Integer> page, final Optional<Integer> perPage, final String... extensions) {
-        Preconditions.checkNotNull(url, "the URI may not be null");
-        Preconditions.checkArgument(!url.startsWith("/"), "the URI may not start with slash");
+    private ApiResponse getResponse(final String uri, final Optional<Integer> page, final Optional<Integer> perPage, final String... extensions) {
+        Preconditions.checkNotNull(uri, "the URI may not be null");
+        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
 
-        final String[] urlParts = url.split("/");
+        final String[] urlParts = uri.split("/");
         return getResponse(urlParts, null, page, perPage, extensions);
     }
 
@@ -142,24 +142,24 @@ public class GenericApiResource {
             }
         }
 
-        final Optional<String[]> nextUrl;
+        final String[] nextUri;
         if (addresses.length > 2) {
-            nextUrl = Optional.of(Arrays.copyOfRange(addresses, 2, addresses.length));
+            nextUri = Arrays.copyOfRange(addresses, 2, addresses.length);
         } else {
-            nextUrl = Optional.empty();
+            nextUri = new String[0];
         }
 
         if (uniqueElement) {
             if (group != null && !group.elements().isEmpty()) {
                 final Element element = group.elements().get(0);
-                return ApiResponse.create(getExtendedJsonStructure(nextUrl, element, extensions, extensionMultimap.get(element)), element.lastModified());
+                return ApiResponse.create(getExtendedJsonStructure(nextUri, element, extensions, extensionMultimap.get(element)), element.lastModified());
             } else {
                 return null;
             }
         } else {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for (final Element element : group.elements()) {
-                arrayBuilder.add(getExtendedJsonStructure(nextUrl, element, extensions, extensionMultimap.get(element)));
+                arrayBuilder.add(getExtendedJsonStructure(nextUri, element, extensions, extensionMultimap.get(element)));
             }
 
             if (resolver.defaultPageSize() > 0) {
@@ -171,18 +171,18 @@ public class GenericApiResource {
     }
 
     /**
-     * Returns the {@link JsonStructure} for the parent element if {@code nextUrl} is empty or else forwards the request to
+     * Returns the {@link JsonStructure} for the parent element if {@code nextUri} is empty or else forwards the request to
      * {@link #getResponse(String[], Element, Optional, Optional, String...)} with the current parent element and selects recursively the result of it.
      *
-     * @param nextUrl            the optional nexty url
+     * @param nextUri            the optional next uri
      * @param parent             the parent element
      * @param extensions         an array of all requested extensions
      * @param resolvedExtensions a list of all resolved extensions so far
      * @return the JSON representation for the parent element or the result of a forwarded request
      */
-    private JsonStructure getExtendedJsonStructure(final Optional<String[]> nextUrl, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
-        if (nextUrl.isPresent()) {
-            return getResponse(nextUrl.get(), parent, Optional.empty(), Optional.empty(), extensions).getObject();
+    private JsonStructure getExtendedJsonStructure(final String[] nextUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
+        if (nextUri.length > 0) {
+            return getResponse(nextUri, parent, Optional.empty(), Optional.empty(), extensions).getObject();
         } else {
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
