@@ -215,12 +215,12 @@ public class GenericApiResource {
      * @param addresses the addresses array
      * @param page      the optional page
      * @param perPage   the optional per page limit
-     * @return th elist of all filters specified for the resolver
+     * @return the list of all filters specified for the resolver
      */
     private Filters initializeFilters(String[] addresses, Optional<Integer> page, Optional<Integer> perPage) {
         final Filters.Builder builder = Filters.Builder.initialize();
 
-        if (page.isPresent() || perPage.isPresent()) {
+        if (addresses.length == 1 && (page.isPresent() || perPage.isPresent())) {
             builder.add(new PageFilter(page.orElse(1), perPage));
         }
         if (addresses.length > 1) {
