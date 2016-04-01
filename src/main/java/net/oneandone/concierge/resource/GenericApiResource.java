@@ -45,7 +45,9 @@ public class GenericApiResource {
                                 @QueryParam("page") Integer page,
                                 @QueryParam("per_page") Integer perPage,
                                 @QueryParam("show") List<String> show) {
-        final ApiResponse apiResponse = getResponse(uri, Optional.ofNullable(page), Optional.ofNullable(perPage), show.toArray(new String[show.size()]));
+        final OptionalInt pageOptional = page == null ? OptionalInt.empty() : OptionalInt.of(page);
+        final OptionalInt perPageOptional = perPage == null ? OptionalInt.empty() : OptionalInt.of(perPage);
+        final ApiResponse apiResponse = getResponse(uri, pageOptional, perPageOptional, show.toArray(new String[show.size()]));
         if (apiResponse == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -71,7 +73,7 @@ public class GenericApiResource {
      * @param extensions an array of all requested extensions
      * @return the response or null
      */
-    private ApiResponse getResponse(final String uri, final Optional<Integer> page, final Optional<Integer> perPage, final String... extensions) {
+    private ApiResponse getResponse(final String uri, final OptionalInt page, final OptionalInt perPage, final String... extensions) {
         Preconditions.checkNotNull(uri, "the URI may not be null");
         Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
 
@@ -89,7 +91,7 @@ public class GenericApiResource {
      * @param extensions an array of all requested extensions
      * @return the response or {@code null}
      */
-    private ApiResponse getResponse(final String[] addresses, final Element parent, Optional<Integer> page, Optional<Integer> perPage, final String... extensions) {
+    private ApiResponse getResponse(final String[] addresses, final Element parent, OptionalInt page, OptionalInt perPage, final String... extensions) {
         Preconditions.checkNotNull(addresses, "the addresses may not be null");
         Preconditions.checkArgument(addresses.length > 0, "the addresses may not be empty");
 
@@ -124,7 +126,7 @@ public class GenericApiResource {
      * @param extensions an array of all requested extensions
      * @return the response
      */
-    private ApiResponse getGroupResponse(String[] addresses, Element parent, Optional<Integer> page, Optional<Integer> perPage, String groupName, GroupResolver resolver, String... extensions) {
+    private ApiResponse getGroupResponse(String[] addresses, Element parent, OptionalInt page, OptionalInt perPage, String groupName, GroupResolver resolver, String... extensions) {
         // Unique by URL concept: group/element/group/element/...
         final boolean uniqueElement = addresses.length >= 2;
 
@@ -172,7 +174,7 @@ public class GenericApiResource {
 
     /**
      * Returns the {@link JsonStructure} for the parent element if {@code nextUri} is empty or else forwards the request to
-     * {@link #getResponse(String[], Element, Optional, Optional, String...)} with the current parent element and selects recursively the result of it.
+     * {@link #getResponse(String[], Element, OptionalInt, OptionalInt, String...)} with the current parent element and selects recursively the result of it.
      *
      * @param nextUri            the optional next uri
      * @param parent             the parent element
@@ -182,7 +184,7 @@ public class GenericApiResource {
      */
     private JsonStructure getExtendedJsonStructure(final String[] nextUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
         if (nextUri.length > 0) {
-            return getResponse(nextUri, parent, Optional.empty(), Optional.empty(), extensions).getObject();
+            return getResponse(nextUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions).getObject();
         } else {
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
@@ -198,7 +200,7 @@ public class GenericApiResource {
             for (final String extension : extensions) {
                 final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> r.name().equals(extension) && r.parentGroup().isPresent() && parent.group().equals(r.parentGroup().get())).findAny();
                 if (resolver.isPresent()) {
-                    final ApiResponse apiResponse = getResponse(new String[]{extension}, parent, Optional.empty(), Optional.empty(), extensions);
+                    final ApiResponse apiResponse = getResponse(new String[]{extension}, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
                     if (apiResponse != null) {
                         objectBuilder.add(extension, apiResponse.getObject());
                     }
@@ -217,7 +219,7 @@ public class GenericApiResource {
      * @param perPage   the optional per page limit
      * @return the list of all filters specified for the resolver
      */
-    private Filters initializeFilters(String[] addresses, Optional<Integer> page, Optional<Integer> perPage) {
+    private Filters initializeFilters(String[] addresses, OptionalInt page, OptionalInt perPage) {
         final Filters.Builder builder = Filters.Builder.initialize();
 
         if (addresses.length == 1 && (page.isPresent() || perPage.isPresent())) {
