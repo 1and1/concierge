@@ -155,4 +155,11 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 404);
     }
+
+    @Test
+    public void testGettingUnknownGroup() {
+        final Response response = apiResource.getResource("users/daniel.germandrummer92/instruments", null, null, Collections.emptyList());
+
+        assertEquals(response.getStatus(), 404);
+    }
 }

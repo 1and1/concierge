@@ -60,8 +60,9 @@ public class GenericApiResource {
             }
             responseBuilder.header("Last-Modified", apiResponse.getLastModified().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
             return responseBuilder.build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
-        return Response.serverError().entity("nothing found for " + uri).build();
     }
 
     /**
@@ -173,30 +174,37 @@ public class GenericApiResource {
     }
 
     /**
-     * Returns the {@link JsonStructure} for the parent element if {@code nextUri} is empty or else forwards the request to
+     * Returns the {@link JsonStructure} for the parent element if {@code restOfUri} is empty or else forwards the request to
      * {@link #getResponse(String[], Element, OptionalInt, OptionalInt, String...)} with the current parent element and selects recursively the result of it.
      *
-     * @param nextUri            the optional next uri
+     * @param restOfUri          the optional rest of the uri
      * @param parent             the parent element
      * @param extensions         an array of all requested extensions
      * @param resolvedExtensions a list of all resolved extensions so far
      * @return the JSON representation for the parent element or the result of a forwarded request
      */
-    private JsonStructure getExtendedJsonStructure(final String[] nextUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
-        if (nextUri.length > 0) {
-            return getResponse(nextUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions).getObject();
+    private JsonStructure getExtendedJsonStructure(final String[] restOfUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
+        if (restOfUri.length > 0) {
+            final ApiResponse response = getResponse(restOfUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
+            if (response != null) {
+                return response.getObject();
+            }
+            return null;
         } else {
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
+            // clone JSON element
             final JsonObject jsonObject = parent.content();
             for (final String key : jsonObject.keySet()) {
                 objectBuilder.add(key, jsonObject.get(key));
             }
 
+            // add resolved extensions to cloned element
             for (final Extension extension : resolvedExtensions) {
                 objectBuilder.add(extension.address(), extension.content());
             }
 
+            // check for missing extensions and add them
             for (final String extension : extensions) {
                 final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> r.name().equals(extension) && r.parentGroup().isPresent() && parent.group().equals(r.parentGroup().get())).findAny();
                 if (resolver.isPresent()) {
