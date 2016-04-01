@@ -3,6 +3,7 @@ package net.oneandone.concierge.api;
 import lombok.AllArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /** An elements group. */
@@ -42,6 +43,10 @@ public class Group implements Addressable {
     @Override
     public ZonedDateTime lastModified() {
         return lastModified;
+    }
+
+    public static Group empty(final String name) {
+        return new Group(name, Collections.emptyList(), 0, ZonedDateTime.now());
     }
 
 }

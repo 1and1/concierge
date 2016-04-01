@@ -42,12 +42,12 @@ public class PostResolver implements GroupResolver {
                 if (post.isPresent()) {
                     return new Group(name(), Collections.singletonList(user.get()), 1, post.get().lastModified());
                 }
-                return null;
+                return Group.empty(name());
             }
 
             return new Group(name(), posts, posts.size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(posts.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
         }
-        return null;
+        return Group.empty(name());
     }
 
     @Override

@@ -42,7 +42,7 @@ public class UserResolver implements GroupResolver {
             if (user.isPresent()) {
                 return new Group(name(), Collections.singletonList(user.get()), 1, user.get().lastModified());
             }
-            return null;
+            return Group.empty(name());
         }
 
         final Optional<PageFilter> pageFilter = filters.get(PageFilter.class);
