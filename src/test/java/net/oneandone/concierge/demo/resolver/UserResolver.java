@@ -51,15 +51,24 @@ public class UserResolver implements GroupResolver {
         final int perPage;
         if (pageFilter.isPresent()) {
             page = pageFilter.get().getPage();
-            perPage = pageFilter.get().getPerPage();
+            perPage = pageFilter.get().getPerPage().orElse(defaultPageSize());
+
+            if (perPage > maximumPageSize()) {
+                throw new IllegalArgumentException("requested page size of " + perPage + " with maximum set to " + maximumPageSize());
+            }
         } else {
             page = 1;
             perPage = defaultPageSize();
         }
 
-        final int skip = (page - 1) * perPage;
-        final int limit = perPage;
-        final List<Element> elements = DemoData.USER_POSTS.keySet().stream().skip(skip).limit(limit).collect(Collectors.toList());
+        final List<Element> elements;
+        if (defaultPageSize() > 0 && perPage > 0) {
+            final int skip = (page - 1) * perPage;
+            final int limit = perPage;
+            elements = DemoData.USER_POSTS.keySet().stream().skip(skip).limit(limit).collect(Collectors.toList());
+        } else {
+            elements = DemoData.USER_POSTS.keySet().stream().collect(Collectors.toList());
+        }
 
         return new Group(name(), elements, DemoData.USER_POSTS.keySet().size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(elements.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
     }

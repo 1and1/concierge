@@ -214,7 +214,7 @@ public class GenericApiResource {
         final Filters.Builder builder = Filters.Builder.initialize();
 
         if (page.isPresent() || perPage.isPresent()) {
-            builder.add(new PageFilter(page.orElse(1), perPage.orElse(0)));
+            builder.add(new PageFilter(page.orElse(1), perPage));
         }
         if (addresses.length > 1) {
             builder.add(new AddressFilter(addresses[1]));
