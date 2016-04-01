@@ -39,6 +39,44 @@ public class GenericApiResource {
         this.extensionResolvers = extensionResolvers;
     }
 
+    @OPTIONS
+    @Path("/{uri:.*}")
+    public Response getOptions(@PathParam("uri") String uri) {
+        Preconditions.checkNotNull(uri, "the URI may not be null");
+        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+
+        final String[] splittedUri = uri.split("/");
+
+        String lastGroup = null;
+        for (int i = 0; i < splittedUri.length; i += 2) {
+            final int index = i;
+            final String lastGroupName = lastGroup;
+            final Optional<GroupResolver> groupResolver = groupResolvers
+                    .stream()
+                    .filter(r -> r.parentGroup().equals(Optional.ofNullable(lastGroupName)) && r.name().equals(splittedUri[index]))
+                    .findAny();
+
+            if (i == splittedUri.length - 1) {
+                // may be a group or an extension
+                if (!groupResolver.isPresent()) {
+                    final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> r.forGroup().equals(lastGroupName) && r.name().equals(splittedUri[index])).findAny();
+                    if (!extensionResolver.isPresent()) {
+                        return Response.status(Response.Status.NOT_FOUND).build();
+                    }
+                }
+            } else {
+                // only groups available
+                if (groupResolver.isPresent()) {
+                    lastGroup = groupResolver.get().name();
+                } else {
+                    return Response.status(Response.Status.NOT_FOUND).build();
+                }
+            }
+        }
+
+        return Response.ok().header("Accept", "GET, OPTIONS").build();
+    }
+
     @GET
     @Path("/{uri:.*}")
     public Response getResource(@PathParam("uri") String uri,

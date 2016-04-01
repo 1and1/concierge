@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertEqualsNoOrder;
 import static org.testng.Assert.assertNotNull;
 
 public class GenericApiResourceTest {
@@ -159,6 +160,45 @@ public class GenericApiResourceTest {
     @Test
     public void testGettingUnknownGroup() {
         final Response response = apiResource.getResource("users/daniel.germandrummer92/instruments", null, null, Collections.emptyList());
+
+        assertEquals(response.getStatus(), 404);
+    }
+
+    @Test
+    public void testOptionsForRootGroup() {
+        final Response response = apiResource.getOptions("users");
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.getHeaderString("Accept"), "GET, OPTIONS");
+    }
+
+    @Test
+    public void testOptionsForElement() {
+        final Response response = apiResource.getOptions("users/tobias.netdevfighter");
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.getHeaderString("Accept"), "GET, OPTIONS");
+    }
+
+    @Test
+    public void testOptionsForSubgroup() {
+        final Response response = apiResource.getOptions("users/andreas.piranha87/posts");
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.getHeaderString("Accept"), "GET, OPTIONS");
+    }
+
+    @Test
+    public void testOptionsForExtension() {
+        final Response response = apiResource.getOptions("users/johann.bitionaire/profile");
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.getHeaderString("Accept"), "GET, OPTIONS");
+    }
+
+    @Test
+    public void testOptionsForNonExisting() {
+        final Response response = apiResource.getOptions("users/daniel.germandrummer92/instruments");
 
         assertEquals(response.getStatus(), 404);
     }
