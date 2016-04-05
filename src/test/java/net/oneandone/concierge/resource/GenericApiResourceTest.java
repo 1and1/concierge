@@ -1,7 +1,5 @@
 package net.oneandone.concierge.resource;
 
-import net.oneandone.concierge.api.resolver.ExtensionResolver;
-import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.JsonHelper;
 import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.demo.resolver.PostResolver;
@@ -121,7 +119,7 @@ public class GenericApiResourceTest {
         assertEquals(response.getHeaderString("Last-Modified"), "1992-07-19T03:04:12Z");
     }
 
-    @Test(enabled = false)
+    @Test
     public void testElementResponseWithExtensions() throws Exception {
         final List<String> extensions = new ArrayList<>();
         extensions.add("profile");
