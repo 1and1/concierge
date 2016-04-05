@@ -1,6 +1,8 @@
 package net.oneandone.concierge.configuration;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.api.resolver.Resolver;
@@ -13,27 +15,14 @@ import java.util.List;
 @Slf4j
 public class Resolvers {
 
-    @JsonProperty("group")
-    private List<String> groupResolverClassNames;
+    @Getter private List<GroupResolver> groupResolvers;
+    @Getter private List<ExtensionResolver> extensionResolvers;
 
-    @JsonProperty("extension")
-    private List<String> extensionResolverClassNames;
-
-    private List<GroupResolver> groupResolvers;
-    private List<ExtensionResolver> extensionResolvers;
-
-    public List<GroupResolver> getGroupResolvers() {
-        if (groupResolvers == null) {
-            groupResolvers = getResolvers(GroupResolver.class, groupResolverClassNames);
-        }
-        return groupResolvers;
-    }
-
-    public List<ExtensionResolver> getExtensionResolvers() {
-        if (extensionResolvers == null) {
-            extensionResolvers = getResolvers(ExtensionResolver.class, extensionResolverClassNames);
-        }
-        return extensionResolvers;
+    @JsonCreator
+    public Resolvers(@JsonProperty("group") final List<String> groupResolverClassNames,
+                     @JsonProperty("extension") final List<String> extensionResolverClassNames) {
+        groupResolvers = getResolvers(GroupResolver.class, groupResolverClassNames);
+        extensionResolvers = getResolvers(ExtensionResolver.class, extensionResolverClassNames);
     }
 
     private static <T extends Resolver> List<T> getResolvers(final Class<T> resolverInterface, final List<String> classNames) {

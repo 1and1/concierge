@@ -27,14 +27,7 @@ public class ApiGatewayConfigurationTest {
                 .add(UserProfileExtensionResolver.class.getCanonicalName())
                 .build();
 
-        final Resolvers resolvers = new Resolvers();
-        final Field groupResolverClassNamesField = Resolvers.class.getDeclaredField("groupResolverClassNames");
-        groupResolverClassNamesField.setAccessible(true);
-        groupResolverClassNamesField.set(resolvers, groupResolverClassNames);
-
-        final Field extensionResolverClassNamesField = Resolvers.class.getDeclaredField("extensionResolverClassNames");
-        extensionResolverClassNamesField.setAccessible(true);
-        extensionResolverClassNamesField.set(resolvers, extensionResolverClassNames);
+        final Resolvers resolvers = new Resolvers(groupResolverClassNames, extensionResolverClassNames);
 
         final ApiGatewayConfiguration configuration = new ApiGatewayConfiguration();
         final Field resolversField = ApiGatewayConfiguration.class.getDeclaredField("resolvers");
@@ -60,21 +53,7 @@ public class ApiGatewayConfigurationTest {
 
         final List<String> extensionResolverClassNames = ImmutableList.<String>builder().build();
 
-        final Resolvers resolvers = new Resolvers();
-        final Field groupResolverClassNamesField = Resolvers.class.getDeclaredField("groupResolverClassNames");
-        groupResolverClassNamesField.setAccessible(true);
-        groupResolverClassNamesField.set(resolvers, groupResolverClassNames);
-
-        final Field extensionResolverClassNamesField = Resolvers.class.getDeclaredField("extensionResolverClassNames");
-        extensionResolverClassNamesField.setAccessible(true);
-        extensionResolverClassNamesField.set(resolvers, extensionResolverClassNames);
-
-        final ApiGatewayConfiguration configuration = new ApiGatewayConfiguration();
-        final Field resolversField = ApiGatewayConfiguration.class.getDeclaredField("resolvers");
-        resolversField.setAccessible(true);
-        resolversField.set(configuration, resolvers);
-
-        configuration.getResolvers().getGroupResolvers();
+        new Resolvers(groupResolverClassNames, extensionResolverClassNames);
     }
 
 }
