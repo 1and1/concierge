@@ -15,8 +15,8 @@ import java.util.List;
 @Slf4j
 public class Resolvers {
 
-    @Getter private List<GroupResolver> groupResolvers;
-    @Getter private List<ExtensionResolver> extensionResolvers;
+    @Getter private final List<GroupResolver> groupResolvers;
+    @Getter private final List<ExtensionResolver> extensionResolvers;
 
     @JsonCreator
     public Resolvers(@JsonProperty("group") final List<String> groupResolverClassNames,

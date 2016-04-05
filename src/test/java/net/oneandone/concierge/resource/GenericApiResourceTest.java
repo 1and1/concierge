@@ -3,6 +3,7 @@ package net.oneandone.concierge.resource;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.JsonHelper;
+import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.demo.resolver.PostResolver;
 import net.oneandone.concierge.demo.resolver.UserProfileExtensionResolver;
 import net.oneandone.concierge.demo.resolver.UserResolver;
@@ -23,15 +24,15 @@ public class GenericApiResourceTest {
 
     @BeforeClass
     public static void setUpApiResource() {
-        final List<ExtensionResolver> extensionResolvers = new ArrayList<>();
-        final List<GroupResolver> groupResolvers = new ArrayList<>();
+        final List<String> extensionResolvers = new ArrayList<>();
+        final List<String> groupResolvers = new ArrayList<>();
 
-        groupResolvers.add(new UserResolver());
-        groupResolvers.add(new PostResolver());
+        groupResolvers.add(UserResolver.class.getCanonicalName());
+        groupResolvers.add(PostResolver.class.getCanonicalName());
 
-        extensionResolvers.add(new UserProfileExtensionResolver());
+        extensionResolvers.add(UserProfileExtensionResolver.class.getCanonicalName());
 
-        apiResource = new GenericApiResource(groupResolvers, extensionResolvers);
+        apiResource = new GenericApiResource(new Resolvers(groupResolvers, extensionResolvers));
     }
 
     @Test

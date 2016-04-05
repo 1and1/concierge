@@ -12,6 +12,7 @@ import net.oneandone.concierge.api.filter.Filters;
 import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
+import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 
@@ -28,15 +29,14 @@ import java.util.stream.Collectors;
 @Consumes(MediaType.APPLICATION_JSON)
 public class GenericApiResource {
 
-    private List<ExtensionResolver> extensionResolvers = new ArrayList<>();
-    private List<GroupResolver> groupResolvers = new ArrayList<>();
+    private final List<ExtensionResolver> extensionResolvers;
+    private final List<GroupResolver> groupResolvers;
 
-    public GenericApiResource(final List<GroupResolver> groupResolvers, final List<ExtensionResolver> extensionResolvers) {
-        Preconditions.checkNotNull(groupResolvers, "the group resolvers may not be null");
-        Preconditions.checkNotNull(extensionResolvers, "the extension resolvers may not be null");
+    public GenericApiResource(final Resolvers resolvers) {
+        Preconditions.checkNotNull(resolvers, "the resolvers may not be null");
 
-        this.groupResolvers = groupResolvers;
-        this.extensionResolvers = extensionResolvers;
+        this.groupResolvers = resolvers.getGroupResolvers();
+        this.extensionResolvers = resolvers.getExtensionResolvers();
     }
 
     @OPTIONS
