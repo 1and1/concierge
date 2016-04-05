@@ -68,7 +68,6 @@ public class GenericApiResourceTest {
         assertEquals(response.getHeaderString("Last-Modified"), "1928-02-17T01:32:30Z");
     }
 
-
     @Test
     public void testSingleNestedElementResponse() throws Exception {
         final Response response = apiResource.getResource("users/tobias.netdevfighter/posts/go-hard-or-go-home", null, null, Collections.emptyList());
@@ -78,7 +77,6 @@ public class GenericApiResourceTest {
         assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testSingleNestedElementResponse"));
         assertEquals(response.getHeaderString("Last-Modified"), "2018-11-18T10:11:25Z");
     }
-
 
     @Test
     public void testExtensionResponse() throws Exception {
@@ -123,7 +121,7 @@ public class GenericApiResourceTest {
         assertEquals(response.getHeaderString("Last-Modified"), "1992-07-19T03:04:12Z");
     }
 
-    @Test
+    @Test(enabled = false)
     public void testElementResponseWithExtensions() throws Exception {
         final List<String> extensions = new ArrayList<>();
         extensions.add("profile");
