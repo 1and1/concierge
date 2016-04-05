@@ -16,6 +16,7 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+@Test(singleThreaded = true)
 public class GenericApiResourceTest {
 
     private static GenericApiResource apiResource;
