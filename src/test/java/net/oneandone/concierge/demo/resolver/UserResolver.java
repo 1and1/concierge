@@ -12,7 +12,6 @@ import net.oneandone.concierge.demo.model.User;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -40,7 +39,7 @@ public class UserResolver implements GroupResolver {
         if (addressFilter.isPresent()) {
             final Optional<User> user = DemoData.USER_POSTS.keySet().stream().filter(u -> u.address().equals(addressFilter.get().getAddress())).findFirst();
             if (user.isPresent()) {
-                return new Group(name(), Collections.singletonList(user.get()), 1, user.get().lastModified());
+                return Group.withElement(user.get());
             }
             return Group.empty(name());
         }
@@ -70,7 +69,7 @@ public class UserResolver implements GroupResolver {
             elements = DemoData.USER_POSTS.keySet().stream().collect(Collectors.toList());
         }
 
-        return new Group(name(), elements, DemoData.USER_POSTS.keySet().size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(elements.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
+        return Group.withElements(name(), elements, DemoData.USER_POSTS.keySet().size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(elements.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
     }
 
     @Override

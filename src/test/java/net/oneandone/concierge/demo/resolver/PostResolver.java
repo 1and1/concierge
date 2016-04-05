@@ -40,12 +40,12 @@ public class PostResolver implements GroupResolver {
             if (addressFilter.isPresent()) {
                 final Optional<Element> post = posts.stream().filter(p -> p.address().equals(addressFilter.get().getAddress())).findFirst();
                 if (post.isPresent()) {
-                    return new Group(name(), Collections.singletonList(user.get()), 1, post.get().lastModified());
+                    return Group.withElement(post.get());
                 }
                 return Group.empty(name());
             }
 
-            return new Group(name(), posts, posts.size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(posts.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
+            return Group.withElements(name(), posts, posts.size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(posts.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
         }
         return Group.empty(name());
     }
