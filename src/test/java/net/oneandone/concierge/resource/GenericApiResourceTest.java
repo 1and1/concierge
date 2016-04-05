@@ -6,7 +6,6 @@ import net.oneandone.concierge.JsonHelper;
 import net.oneandone.concierge.demo.resolver.PostResolver;
 import net.oneandone.concierge.demo.resolver.UserProfileExtensionResolver;
 import net.oneandone.concierge.demo.resolver.UserResolver;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -16,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertEqualsNoOrder;
 import static org.testng.Assert.assertNotNull;
 
 public class GenericApiResourceTest {
@@ -42,7 +40,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponse"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponse"));
 
         assertEquals(response.getHeaderString("Accept-Ranges"), "users");
         assertEquals(response.getHeaderString("Content-Range"), "users 0-2/4");
@@ -55,7 +53,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testNestedGroupResponse"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testNestedGroupResponse"));
         assertEquals(response.getHeaderString("Last-Modified"), "1961-06-02T05:12:12Z");
     }
 
@@ -65,7 +63,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testSingleRootElementResponse"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testSingleRootElementResponse"));
         assertEquals(response.getHeaderString("Last-Modified"), "1928-02-17T01:32:30Z");
     }
 
@@ -76,7 +74,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testSingleNestedElementResponse"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testSingleNestedElementResponse"));
         assertEquals(response.getHeaderString("Last-Modified"), "2018-11-18T10:11:25Z");
     }
 
@@ -87,7 +85,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testExtensionResponse"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testExtensionResponse"));
         assertEquals(response.getHeaderString("Last-Modified"), "1961-06-02T05:12:12Z");
     }
 
@@ -100,7 +98,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponseWithExtensions"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponseWithExtensions"));
 
         assertEquals(response.getHeaderString("Accept-Ranges"), "users");
         assertEquals(response.getHeaderString("Content-Range"), "users 0-2/4");
@@ -117,7 +115,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponseWithExtensionsAndSubgroups"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testGroupResponseWithExtensionsAndSubgroups"));
 
         assertEquals(response.getHeaderString("Accept-Ranges"), "users");
         assertEquals(response.getHeaderString("Content-Range"), "users 0-3/4");
@@ -133,7 +131,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testElementResponseWithExtensions"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testElementResponseWithExtensions"));
         assertEquals(response.getHeaderString("Last-Modified"), "1961-06-02T05:12:12Z");
     }
 
@@ -143,7 +141,7 @@ public class GenericApiResourceTest {
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
-        Assert.assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testPageCount"));
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testPageCount"));
 
         assertEquals(response.getHeaderString("Accept-Ranges"), "users");
         assertEquals(response.getHeaderString("Content-Range"), "users 3-3/4");
