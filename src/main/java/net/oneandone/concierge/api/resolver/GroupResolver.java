@@ -10,14 +10,6 @@ import java.util.Optional;
 public interface GroupResolver extends Resolver {
 
     /**
-     * Returns the optionally present parent group.
-     * E.g. the {@code interfaces} parent group is the group class of {@code devices}.
-     *
-     * @return the optionally present parent group
-     */
-    public Optional<String> parentGroup();
-
-    /**
      * The default page size or 0 if page size is unlimited.
      *
      * @return default page size or 0 if page size is unlimited

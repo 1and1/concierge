@@ -12,13 +12,6 @@ import java.util.Optional;
 public interface ExtensionResolver extends Resolver {
 
     /**
-     * Returns the name of the group of the elements that should be extended.
-     *
-     * @return the name of the elements group
-     */
-    public String forGroup();
-
-    /**
      * Resolves and returns the optional extension for the specified parent element.
      *
      * @param element the parent element
