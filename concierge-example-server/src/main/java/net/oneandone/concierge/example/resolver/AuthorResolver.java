@@ -18,7 +18,7 @@ public class AuthorResolver extends BasicGroupResolver {
 
     @Override
     public int defaultPageSize() {
-        return 2;
+        return 3;
     }
 
     @Override

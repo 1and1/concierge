@@ -16,6 +16,7 @@ public class Author implements Element {
 
     private long id;
     private String name;
+    private String nationality;
 
     @Override
     public String group() {
