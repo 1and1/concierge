@@ -20,6 +20,7 @@ import javax.json.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -106,6 +107,12 @@ public class GenericApiResource {
     private ApiResponse getResponse(final String uri, final OptionalInt page, final OptionalInt perPage, final String... extensions) {
         Preconditions.checkNotNull(uri, "the URI may not be null");
         Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+
+        // return root groups
+        if (uri.isEmpty()) {
+            final List<String> rootGroups = groupResolvers.stream().filter(r -> r.hierarchy().length == 1).map(GroupResolver::name).collect(Collectors.toList());
+            return ApiResponse.create(getLinks(new String[0], rootGroups, Collections.emptyList()), ZonedDateTime.now());
+        }
 
         return getResponse(new String[0], uri.split("/"), null, page, perPage, extensions);
     }
