@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'jacoco'
 
 group = 'net.oneandone'
 version = '0.1-SNAPSHOT'
@@ -27,8 +28,19 @@ dependencies {
 
 test {
     useTestNG()
+    jacoco {
+        enabled = true
+    }
+}
+
+jacocoTestReport {
+    reports.xml {
+        enabled = true
+        destination = "${buildDir}/jacoco/coverage.xml"
+    }
 }
 
 javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
+

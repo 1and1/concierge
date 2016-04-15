@@ -3,8 +3,6 @@ package net.oneandone.concierge;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import net.oneandone.concierge.api.resolver.ExtensionResolver;
-import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.configuration.ApiGatewayConfiguration;
 import net.oneandone.concierge.resource.GenericApiResource;
 import io.dropwizard.Application;
@@ -12,7 +10,6 @@ import io.dropwizard.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URL;
-import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 @Slf4j

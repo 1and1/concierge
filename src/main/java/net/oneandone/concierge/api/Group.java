@@ -48,6 +48,12 @@ public class Group implements Addressable {
     }
 
     /* ********** EMPTY GROUP **********************************************************/
+    /**
+     * Returns an empty group.
+     *
+     * @param name the group name
+     * @return an empty group
+     */
     public static Group empty(final String name) {
         return new EmptyGroup(name);
     }
@@ -59,6 +65,12 @@ public class Group implements Addressable {
     }
 
     /* ********** SINGLE ELEMENT GROUP *************************************************/
+    /**
+     * Returns a result containing only one unique element, as the result of a query with an {@link net.oneandone.concierge.api.filter.AddressFilter}.
+     *
+     * @param element the unique element
+     * @return a group with a single element
+     */
     public static Group withElement(final Element element) {
         Preconditions.checkNotNull(element, "the element may not be null");
         return new SingleElementGroup(element);
@@ -71,6 +83,15 @@ public class Group implements Addressable {
     }
 
     /* ********** MULTI ELEMENT GROUP **************************************************/
+    /**
+     * Returns a multi element group.
+     *
+     * @param name the group name
+     * @param elements the list of elements for this group (might be a paged result)
+     * @param total the number of total results for this group
+     * @param zonedDateTime the date of the last update
+     * @return multi element group
+     */
     public static Group withElements(final String name, final List<Element> elements, final int total, final ZonedDateTime zonedDateTime) {
         Preconditions.checkNotNull(elements, "the elements may not be null");
         return new MultiElementGroup(name, elements, total, zonedDateTime);

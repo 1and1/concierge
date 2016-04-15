@@ -17,10 +17,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class UserResolver implements GroupResolver {
-
     @Override
-    public Optional<String> parentGroup() {
-        return Optional.empty();
+    public String[] hierarchy() {
+        return new String[]{ "users" };
     }
 
     @Override
@@ -70,10 +69,5 @@ public class UserResolver implements GroupResolver {
         }
 
         return Group.withElements(name(), elements, DemoData.USER_POSTS.keySet().size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(elements.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
-    }
-
-    @Override
-    public String name() {
-        return "users";
     }
 }

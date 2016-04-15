@@ -10,8 +10,8 @@ import java.util.Optional;
 
 public class UserProfileExtensionResolver implements ExtensionResolver {
     @Override
-    public String forGroup() {
-        return "users";
+    public String[] hierarchy() {
+        return new String[]{ "users", "profile" };
     }
 
     @Override
@@ -21,10 +21,5 @@ public class UserProfileExtensionResolver implements ExtensionResolver {
             return Optional.ofNullable(DemoData.USER_PROFILES.get(user.get()));
         }
         return Optional.empty();
-    }
-
-    @Override
-    public String name() {
-        return "profile";
     }
 }

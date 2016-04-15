@@ -16,8 +16,8 @@ import java.util.*;
 public class PostResolver implements GroupResolver {
 
     @Override
-    public Optional<String> parentGroup() {
-        return Optional.of("users");
+    public String[] hierarchy() {
+        return new String[]{ "users", "posts" };
     }
 
     @Override
@@ -48,11 +48,6 @@ public class PostResolver implements GroupResolver {
             return Group.withElements(name(), posts, posts.size(), ZonedDateTime.of(LocalDateTime.ofEpochSecond(posts.hashCode(), 0, ZoneOffset.UTC), ZoneOffset.UTC));
         }
         return Group.empty(name());
-    }
-
-    @Override
-    public String name() {
-        return "posts";
     }
 
 }
