@@ -35,6 +35,15 @@ public class GenericApiResourceTest {
     }
 
     @Test
+    public void testRootResponse() throws Exception {
+        final Response response = apiResource.getResource("", null, null, Collections.emptyList());
+
+        assertEquals(response.getStatus(), 200);
+        assertNotNull(response.getEntity());
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testRootResponse"));
+    }
+
+    @Test
     public void testGroupResponse() throws Exception {
         final Response response = apiResource.getResource("users", null, null, Collections.emptyList());
 

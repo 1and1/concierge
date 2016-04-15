@@ -6,7 +6,15 @@
         "title": "Creativity",
         "text": "I like to destroy, not to create!"
       }
-    ]
+    ],
+    "links": {
+      "groups": {
+        "posts": "/users/andreas.piranha87/posts"
+      },
+      "extensions": {
+        "profile": "/users/andreas.piranha87/profile"
+      }
+    }
   },
   {
     "name": "Johann Bitionaire",
@@ -23,7 +31,15 @@
         "title": "Darkwing Duck",
         "text": "Let's get dangerous!"
       }
-    ]
+    ],
+    "links": {
+      "groups": {
+        "posts": "/users/johann.bitionaire/posts"
+      },
+      "extensions": {
+        "profile": "/users/johann.bitionaire/profile"
+      }
+    }
   },
   {
     "name": "Tobias Netdevfighter",
@@ -32,7 +48,15 @@
         "title": "Go hard or go home",
         "text": "Work smarter not harder ... and then go home!"
       }
-    ]
+    ],
+    "links": {
+      "groups": {
+        "posts": "/users/tobias.netdevfighter/posts"
+      },
+      "extensions": {
+        "profile": "/users/tobias.netdevfighter/profile"
+      }
+    }
   },
   {
     "name": "Daniel Germandrummer92",
@@ -41,6 +65,14 @@
         "title": "My thoughts on leadership",
         "text": "I'm here to lead not to read!"
       }
-    ]
+    ],
+    "links": {
+      "groups": {
+        "posts": "/users/daniel.germandrummer92/posts"
+      },
+      "extensions": {
+        "profile": "/users/daniel.germandrummer92/profile"
+      }
+    }
   }
 ]
