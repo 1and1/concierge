@@ -10,11 +10,47 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**  Implementation of a basic group resolver in order to prevent if-else cascades. */
 public abstract class BasicGroupResolver implements GroupResolver {
 
+    /**
+     * Return a specific element for the specified address.
+     *
+     * @param parent the parent element
+     * @param address the address
+     * @return the optional result
+     */
     public abstract Optional<Element> element(final Element parent, final String address);
+
+    /**
+     * Returns the number of total elements for the specified parent and filters.
+     *
+     * @param parent the parent element
+     * @param filters the filters
+     * @return the number of total elements
+     */
     public abstract int total(final Element parent, final Filters filters);
+
+    /**
+     * Returns the last update date for the list with the specified parent and filters.
+     *
+     * @param parent the parent element
+     * @param filters the filters
+     * @return the last update date
+     */
     public abstract ZonedDateTime lastUpdate(final Element parent, final Filters filters);
+
+    /**
+     * Returns the list of elements for the specified parent and filters.
+     * <p />
+     * The result may or may not be paged.
+     *
+     * @param parent the parent element
+     * @param page the page or {@code 0} if paging is not required
+     * @param perPage the per page count or {@code 0} if paging is not required
+     * @param filters the filters
+     * @return the list of elements
+     */
     public abstract List<Element> elements(final Element parent, final int page, final int perPage, final Filters filters);
 
     @Override
