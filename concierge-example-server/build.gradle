@@ -12,10 +12,6 @@ targetCompatibility = '1.8'
 
 mainClassName = "net.oneandone.concierge.example.Main"
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     compile rootProject
 }
