@@ -4,8 +4,6 @@ import net.oneandone.concierge.api.Element;
 import net.oneandone.concierge.api.Group;
 import net.oneandone.concierge.api.filter.Filters;
 
-import java.util.Optional;
-
 /** Resolves all elements for a group. */
 public interface GroupResolver extends Resolver {
 
