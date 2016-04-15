@@ -15,7 +15,18 @@ import java.util.List;
 @Slf4j
 public class Resolvers {
 
+    /**
+     * The group resolvers.
+     *
+     * @see net.oneandone.concierge.api.Group
+     */
     @Getter private final List<GroupResolver> groupResolvers;
+
+    /**
+     * The extension resolvers.
+     *
+     * @see net.oneandone.concierge.api.Extension
+     */
     @Getter private final List<ExtensionResolver> extensionResolvers;
 
     @JsonCreator
@@ -25,6 +36,16 @@ public class Resolvers {
         extensionResolvers = getResolvers(ExtensionResolver.class, extensionResolverClassNames);
     }
 
+    /**
+     * Initializes an unmodifiable list of resolvers for the specified class names.
+     *
+     * @param resolverInterface the resolver class
+     * @param classNames the class names to resolve
+     * @param <T> the resolver type
+     * @return the list of resolvers for the specified list of class names
+     *
+     * @throws IllegalStateException if the resolvers could not be initialized
+     */
     private static <T extends Resolver> List<T> getResolvers(final Class<T> resolverInterface, final List<String> classNames) {
         log.debug("about to initialize resolvers for interface '{}': {}", resolverInterface, classNames);
         final List<T> resolvers = new ArrayList<>(classNames.size());

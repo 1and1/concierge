@@ -10,13 +10,13 @@ public interface Addressable {
      *
      * @return the resource name or type
      */
-    public String address();
+    String address();
 
     /**
      * Returns the date time with timezone of the last update.
      *
      * @return the date time with timezone of the last update
      */
-    public ZonedDateTime lastModified();
+    ZonedDateTime lastModified();
 
 }

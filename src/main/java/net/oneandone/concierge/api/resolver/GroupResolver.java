@@ -12,14 +12,14 @@ public interface GroupResolver extends Resolver {
      *
      * @return default page size or 0 if page size is unlimited
      */
-    public int defaultPageSize();
+    int defaultPageSize();
 
     /**
      * The miaxmum page size or 0 if page size is unlimited.
      *
      * @return miaxmum page size or 0 if page size is unlimited
      */
-    public int maximumPageSize();
+    int maximumPageSize();
 
     /**
      * Returns the group.
@@ -28,6 +28,6 @@ public interface GroupResolver extends Resolver {
      * @param filters the list of filters
      * @return the group
      */
-    public Group elements(final Element parent, final Filters filters);
+    Group elements(final Element parent, final Filters filters);
 
 }
