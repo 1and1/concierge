@@ -37,13 +37,13 @@ public class BookResolver extends BasicGroupResolver {
     }
 
     @Override
-    public int total(final Filters filters) {
-        return 0;
+    public int total(final Element parent, final Filters filters) {
+        return Library.getBooks((Author) parent).size();
     }
 
     @Override
-    public ZonedDateTime lastUpdate(final Filters filters) {
-        return null;
+    public ZonedDateTime lastUpdate(final Element parent, final Filters filters) {
+        return ZonedDateTime.now();
     }
 
     @Override

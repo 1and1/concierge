@@ -13,8 +13,8 @@ import java.util.Optional;
 public abstract class BasicGroupResolver implements GroupResolver {
 
     public abstract Optional<Element> element(final Element parent, final String address);
-    public abstract int total(final Filters filters);
-    public abstract ZonedDateTime lastUpdate(final Filters filters);
+    public abstract int total(final Element parent, final Filters filters);
+    public abstract ZonedDateTime lastUpdate(final Element parent, final Filters filters);
     public abstract List<Element> elements(final Element parent, final int page, final int perPage, final Filters filters);
 
     @Override
@@ -40,7 +40,7 @@ public abstract class BasicGroupResolver implements GroupResolver {
             }
         }
 
-        return Group.withElements(name(), elements(parent, page, perPage, filters), total(filters), lastUpdate(filters));
+        return Group.withElements(name(), elements(parent, page, perPage, filters), total(parent, filters), lastUpdate(parent, filters));
     }
 
 }

@@ -37,12 +37,12 @@ public class AuthorResolver extends BasicGroupResolver {
     }
 
     @Override
-    public int total(final Filters filters) {
+    public int total(final Element parent, final Filters filters) {
         return Library.getAuthors().size();
     }
 
     @Override
-    public ZonedDateTime lastUpdate(final Filters filters) {
+    public ZonedDateTime lastUpdate(final Element parent, final Filters filters) {
         return ZonedDateTime.now();
     }
 
