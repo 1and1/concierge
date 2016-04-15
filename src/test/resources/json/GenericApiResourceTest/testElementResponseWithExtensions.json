@@ -3,5 +3,13 @@
   "profile": {
     "age": 29,
     "gender": "male"
+  },
+  "links": {
+    "groups": {
+      "posts": "/users/johann.bitionaire/posts"
+    },
+    "extensions": {
+      "profile": "/users/johann.bitionaire/profile"
+    }
   }
 }

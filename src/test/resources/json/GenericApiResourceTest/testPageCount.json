@@ -1,5 +1,13 @@
 [
   {
-    "name": "Daniel Germandrummer92"
+    "name": "Daniel Germandrummer92",
+    "links": {
+      "groups": {
+        "posts": "/users/daniel.germandrummer92/posts"
+      },
+      "extensions": {
+        "profile": "/users/daniel.germandrummer92/profile"
+      }
+    }
   }
 ]

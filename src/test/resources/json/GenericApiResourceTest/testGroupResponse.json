@@ -1,11 +1,35 @@
 [
   {
-    "name": "Andreas Piranha87"
+    "name": "Andreas Piranha87",
+    "links": {
+      "groups": {
+        "posts": "/users/andreas.piranha87/posts"
+      },
+      "extensions": {
+        "profile": "/users/andreas.piranha87/profile"
+      }
+    }
   },
   {
-    "name": "Johann Bitionaire"
+    "name": "Johann Bitionaire",
+    "links": {
+      "groups": {
+        "posts": "/users/johann.bitionaire/posts"
+      },
+      "extensions": {
+        "profile": "/users/johann.bitionaire/profile"
+      }
+    }
   },
   {
-    "name": "Tobias Netdevfighter"
+    "name": "Tobias Netdevfighter",
+    "links": {
+      "groups": {
+        "posts": "/users/tobias.netdevfighter/posts"
+      },
+      "extensions": {
+        "profile": "/users/tobias.netdevfighter/profile"
+      }
+    }
   }
 ]
