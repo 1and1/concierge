@@ -1,2 +1,3 @@
 rootProject.name = 'concierge'
+include 'concierge-example-server'
 
