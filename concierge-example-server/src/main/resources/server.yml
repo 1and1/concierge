@@ -7,4 +7,5 @@ resolvers:
   group:
     - "net.oneandone.concierge.example.resolver.AuthorResolver"
     - "net.oneandone.concierge.example.resolver.BookResolver"
-  extension: []
+  extension:
+    - "net.oneandone.concierge.example.resolver.BookRatingExtensionResolver"
