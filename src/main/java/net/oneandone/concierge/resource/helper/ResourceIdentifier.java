@@ -14,16 +14,34 @@ import java.util.OptionalInt;
 
 public class ResourceIdentifier {
 
+    /**
+     * Parses the specified URI and returns the resource identifier.
+     *
+     * @param uri the URI to parse
+     * @return the resource identifier for the specified URI
+     */
     public static ResourceIdentifier parse(final String uri) {
         return new ResourceIdentifier(uri, ImmutableMultimap.of());
     }
 
+    /**
+     * Parses the specified URI and returns the resource identifier.
+     *
+     * @param uri        the URI to parse
+     * @param parameters the request parameters
+     * @return the resource identifier for the specified URI
+     */
     public static ResourceIdentifier parse(final String uri, final Multimap<String, String> parameters) {
         return new ResourceIdentifier(uri, parameters);
     }
 
+    /** The complete URI. */
     private final String[] uri;
+
+    /** The start index of the current scope (see {@link #next()}. */
     private final int startIndex;
+
+    /** The request parameters. */
     private final Multimap<String, String> parameters;
 
     private ResourceIdentifier(final String uri, final Multimap<String, String> parameters) {
@@ -64,7 +82,7 @@ public class ResourceIdentifier {
 
     /**
      * Returns the hierarchy for the current scope.
-     * <p />
+     * <p/>
      * The scope is initially set to the root of the URI and will be iterated within the result of each call on {@link #next()}.
      *
      * @return the hierarchy for the current scope
@@ -95,7 +113,7 @@ public class ResourceIdentifier {
 
     /**
      * Returns a copy the complete group and extension hierarchy.
-     * <p />
+     * <p/>
      * An URI of {@code group1/id1/group2/id2/extension} will return {@code group1/group2/extension}.
      *
      * @return the complete group and extension hierarchy
@@ -119,17 +137,17 @@ public class ResourceIdentifier {
 
     /**
      * Returns the resource identifier for the next scope.
-     * <p />
+     * <p/>
      * The scope is a pair of group and an optional element identifier or the address of an extension.
      * E.g the URI {@code group1/id1/group2/id2/extension} has three scopes:
      * <ol>
-     *     <li>{@code group1/id1}</li>
-     *     <li>{@code group2/id2}</li>
-     *     <li>and {@code extension}</li>
+     * <li>{@code group1/id1}</li>
+     * <li>{@code group2/id2}</li>
+     * <li>and {@code extension}</li>
      * </ol>
      * The resource identifier will be initialized with scope 1) and will return the scope on call of this method.
      *
-     * @return
+     * @return the resource identifier for the next scope
      */
     public ResourceIdentifier next() {
         if (hasNextScope()) {
@@ -169,6 +187,15 @@ public class ResourceIdentifier {
         throw new IndexOutOfBoundsException("resource identifier has no element identifier");
     }
 
+    /**
+     * Extends the current resource identifier by the specified extension.
+     * <p/>
+     * Extensions are only available for elements. If the extend operation will be called
+     * for a group or an extension an {@link IllegalArgumentException} will be thrown instead.
+     *
+     * @param extension the extension name
+     * @return the extended resource identifier
+     */
     public ResourceIdentifier extend(final String extension) {
         if (hasElementIdentifier()) {
             final String[] newUri = Arrays.copyOfRange(uri, 0, startIndex + 3);
@@ -178,6 +205,12 @@ public class ResourceIdentifier {
         throw new IllegalArgumentException("resource identifier is not extensible");
     }
 
+    /**
+     * Extends the current resource identifier by the specified element {@link Element#address()}.
+     *
+     * @param element the element to use for the extension
+     * @return the extended resource identifier
+     */
     public ResourceIdentifier extend(final Element element) {
         if (!hasElementIdentifier()) {
             final String[] newUri = Arrays.copyOfRange(uri, 0, startIndex + 2);
@@ -188,10 +221,22 @@ public class ResourceIdentifier {
         //throw new IllegalArgumentException("current resource identifier " + Arrays.toString(uri) + " is not expendable by an element");
     }
 
+    /**
+     * Returns all extensions as specified by the {@code show} query parameter.
+     *
+     * @return collection of all requested extensions
+     */
     public Collection<String> extensions() {
         return parameters.get("show");
     }
 
+    /**
+     * Returns the filters instance for the current scope of {@code this} resource identifier.
+     * <p/>
+     * See {@link #next()} to learn more about the scope.
+     *
+     * @return the filters
+     */
     public Filters filters() {
         final Filters.Builder builder = Filters.Builder.initialize();
         if (hasElementIdentifier()) {
