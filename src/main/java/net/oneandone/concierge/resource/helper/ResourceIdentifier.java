@@ -1,8 +1,9 @@
-package net.oneandone.concierge.resource;
+package net.oneandone.concierge.resource.helper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import net.oneandone.concierge.api.Element;
 import net.oneandone.concierge.api.filter.AddressFilter;
 import net.oneandone.concierge.api.filter.Filters;
 import net.oneandone.concierge.api.filter.PageFilter;
@@ -32,12 +33,18 @@ public class ResourceIdentifier {
     public static ResourceIdentifier parse(final String uri) {
         Preconditions.checkNotNull(uri, "the URI may not be null");
         Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+        if (uri.isEmpty()) {
+            return new ResourceIdentifier(new String[0], ImmutableMultimap.of());
+        }
         return new ResourceIdentifier(uri.split("/"), ImmutableMultimap.of());
     }
 
     public static ResourceIdentifier parse(final String uri, final Multimap<String, String> parameters) {
         Preconditions.checkNotNull(uri, "the URI may not be null");
         Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+        if (uri.isEmpty()) {
+            return new ResourceIdentifier(new String[0], ImmutableMultimap.copyOf(parameters));
+        }
         return new ResourceIdentifier(uri.split("/"), ImmutableMultimap.copyOf(parameters));
     }
 
@@ -45,21 +52,24 @@ public class ResourceIdentifier {
         return Arrays.copyOf(uri, uri.length);
     }
 
-    public String[] getIdentifier() {
-        return Arrays.copyOfRange(uri, startIndex, uri.length);
-    }
-
     public boolean isEmpty() {
         return uri.length == 0;
     }
 
     public String[] getResolverHierarchy() {
-        // FIXME
-        final String[] resolverHierarchy = uri.length % 2 == 0 ? new String[uri.length / 2] : new String[uri.length / 2 + 1];
-        for (int i = 0; i < uri.length; i += 2) {
+        final String[] resolverHierarchy = new String[(startIndex / 2) + 1];
+        for (int i = 0; i <= startIndex; i += 2) {
             resolverHierarchy[i / 2] = uri[i];
         }
         return resolverHierarchy;
+    }
+
+    public String[] getExtendedResolverHierrchy(final String extension) {
+        final String[] resolverHierarchy = getResolverHierarchy();
+
+        final String[] extendedResolverHierarchy = Arrays.copyOfRange(resolverHierarchy, 0, resolverHierarchy.length + 1);
+        extendedResolverHierarchy[resolverHierarchy.length] = extension;
+        return extendedResolverHierarchy;
     }
 
     public String[] getCompleteResolverHierarchy() {
@@ -93,7 +103,7 @@ public class ResourceIdentifier {
         return uri[startIndex];
     }
 
-    public String getElementIdentifier() {
+    private String getElementIdentifier() {
         return uri[startIndex + 1];
     }
 
@@ -108,6 +118,15 @@ public class ResourceIdentifier {
             return new ResourceIdentifier(newUri, parameters, startIndex);
         }
         throw new IllegalStateException("resource identifier is not extensible");
+    }
+
+    public ResourceIdentifier extend(final Element element) {
+        if (!isElementIdentifier()) {
+            final String[] newUri = Arrays.copyOfRange(uri, 0, startIndex + 2);
+            newUri[startIndex + 1] = element.address();
+            return new ResourceIdentifier(newUri, parameters, startIndex);
+        }
+        return this;
     }
 
     public Collection<String> getExtensions() {
