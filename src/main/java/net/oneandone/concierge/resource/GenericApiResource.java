@@ -46,7 +46,7 @@ public class GenericApiResource {
     @Path("/{uri:.*}")
     public Response getOptions(@PathParam("uri") String uri) {
         final ResourceIdentifier resourceIdentifier = ResourceIdentifier.parse(uri);
-        final String[] resolverPath = resourceIdentifier.getCompleteResolverHierarchy();
+        final String[] resolverPath = resourceIdentifier.completeHierarchy();
 
         final Optional<GroupResolver> groupResolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
         if (!groupResolver.isPresent()) {
@@ -99,7 +99,7 @@ public class GenericApiResource {
      */
     private ApiResponse getResponse(final ResourceIdentifier resourceIdentifier) {
         // return root groups
-        if (resourceIdentifier.isEmpty()) {
+        if (resourceIdentifier.empty()) {
             final List<String> rootGroups = groupResolvers.stream().filter(r -> r.hierarchy().length == 1).map(GroupResolver::name).collect(Collectors.toList());
             return ApiResponse.create(getLinks(resourceIdentifier, rootGroups, Collections.emptyList()), ZonedDateTime.now());
         }
@@ -114,7 +114,7 @@ public class GenericApiResource {
      * @return the response or {@code null}
      */
     private ApiResponse getResponse(final ResourceIdentifier resourceIdentifier, final Element parent) {
-        final String[] resolverHierarchy = resourceIdentifier.getResolverHierarchy();
+        final String[] resolverHierarchy = resourceIdentifier.hierarchy();
 
         final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverHierarchy)).findAny();
 
@@ -142,12 +142,12 @@ public class GenericApiResource {
      * @return the response
      */
     private ApiResponse getGroupResponse(final ResourceIdentifier resourceIdentifier, Element parent, GroupResolver resolver) {
-        final Filters filters = resourceIdentifier.getFilters();
+        final Filters filters = resourceIdentifier.filters();
         final Group group = resolver.elements(parent, filters);
 
         final Multimap<Element, Extension> extensionMultimap = HashMultimap.create();
-        for (final String extension : resourceIdentifier.getExtensions()) {
-            final String[] extendedResolverHierrchy = resourceIdentifier.getExtendedResolverHierrchy(extension);
+        for (final String extension : resourceIdentifier.extensions()) {
+            final String[] extendedResolverHierrchy = resourceIdentifier.extendedHierarchy(extension);
             final List<ExtensionResolver> extensionResolvers = this.extensionResolvers.stream().filter(e -> Arrays.equals(e.hierarchy(), extendedResolverHierrchy)).collect(Collectors.toList());
             for (final ExtensionResolver extensionResolver : extensionResolvers) {
                 final Map<Element, Extension> resolvedExtensions = extensionResolver.resolve(group);
@@ -157,7 +157,7 @@ public class GenericApiResource {
             }
         }
 
-        if (resourceIdentifier.isElementIdentifier()) {
+        if (resourceIdentifier.hasElementIdentifier()) {
             if (group != null && !group.elements().isEmpty()) {
                 final Element element = group.elements().get(0);
                 return ApiResponse.create(getExtendedJsonStructure(resourceIdentifier, element, extensionMultimap.get(element)), element.lastModified());
@@ -182,7 +182,7 @@ public class GenericApiResource {
                     perPage = resolver.defaultPageSize();
                 }
 
-                final ApiResourcePaging paging = ApiResourcePaging.builder().group(resourceIdentifier.getGroupOrExtensionIdentifier()).page(page).perPage(perPage).total(group.total()).build();
+                final ApiResourcePaging paging = ApiResourcePaging.builder().group(resourceIdentifier.groupIdentifier()).page(page).perPage(perPage).total(group.total()).build();
                 return ApiResponse.create(arrayBuilder.build(), group.lastModified(), paging);
             }
             return ApiResponse.create(arrayBuilder.build(), group.lastModified());
@@ -198,12 +198,10 @@ public class GenericApiResource {
      * @return the JSON representation for the parent element or the result of a forwarded request
      */
     private JsonStructure getExtendedJsonStructure(final ResourceIdentifier resourceIdentifier, final Element parent, final Collection<Extension> resolvedExtensions) {
-        if (!resourceIdentifier.isFinalPart()) {
-            if (resourceIdentifier.hasNextPart()) {
-                final ApiResponse response = getResponse(resourceIdentifier.getNextPart(), parent);
-                if (response != null) {
-                    return response.getObject();
-                }
+        if (resourceIdentifier.hasNextScope()) {
+            final ApiResponse response = getResponse(resourceIdentifier.next(), parent);
+            if (response != null) {
+                return response.getObject();
             }
             return null;
         } else {
@@ -222,11 +220,11 @@ public class GenericApiResource {
             }
 
             // check for missing extensions and add them
-            if (extendedResourceIdentifier.isExtensible()) {
-                for (final String extension : extendedResourceIdentifier.getExtensions()) {
-                    final ResourceIdentifier extendedIdentifier = extendedResourceIdentifier.getExtendedIdentifier(extension);
+            if (extendedResourceIdentifier.hasElementIdentifier()) {
+                for (final String extension : extendedResourceIdentifier.extensions()) {
+                    final ResourceIdentifier extendedIdentifier = extendedResourceIdentifier.extend(extension);
 
-                    final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extendedIdentifier.getCompleteResolverHierarchy())).findAny();
+                    final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extendedIdentifier.completeHierarchy())).findAny();
                     if (resolver.isPresent()) {
                         final ApiResponse apiResponse = getResponse(extendedIdentifier);
                         if (apiResponse != null && apiResponse.getObject() != null) {
@@ -237,11 +235,11 @@ public class GenericApiResource {
             }
 
             final List<String> availableSubgroups = groupResolvers.stream()
-                    .filter(r -> r.hierarchy().length == resourceIdentifier.getResolverHierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.getResolverHierarchy()))
+                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
                     .map(r -> r.hierarchy()[r.hierarchy().length - 1])
                     .collect(Collectors.toList());
             final List<String> availableExtensions = extensionResolvers.stream()
-                    .filter(r -> r.hierarchy().length == resourceIdentifier.getResolverHierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.getResolverHierarchy()))
+                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
                     .map(r -> r.hierarchy()[r.hierarchy().length - 1])
                     .collect(Collectors.toList());
             if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
@@ -258,7 +256,7 @@ public class GenericApiResource {
         if (!availableSubgroups.isEmpty()) {
             final JsonObjectBuilder groupLinkBuilder = Json.createObjectBuilder();
             for (final String availableSubgroup : availableSubgroups) {
-                groupLinkBuilder.add(availableSubgroup, "/" + Stream.concat(Arrays.stream(resourceIdentifier.getCompleteIdentifier()), Stream.of(availableSubgroup)).collect(Collectors.joining("/")));
+                groupLinkBuilder.add(availableSubgroup, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableSubgroup)).collect(Collectors.joining("/")));
             }
             linksBuilder.add("groups", groupLinkBuilder.build());
         }
@@ -266,7 +264,7 @@ public class GenericApiResource {
         if (!availableExtensions.isEmpty()) {
             final JsonObjectBuilder extensionLinkBuilder = Json.createObjectBuilder();
             for (final String availableExtension : availableExtensions) {
-                extensionLinkBuilder.add(availableExtension, "/" + Stream.concat(Arrays.stream(resourceIdentifier.getCompleteIdentifier()), Stream.of(availableExtension)).collect(Collectors.joining("/")));
+                extensionLinkBuilder.add(availableExtension, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableExtension)).collect(Collectors.joining("/")));
             }
             linksBuilder.add("extensions", extensionLinkBuilder.build());
         }
