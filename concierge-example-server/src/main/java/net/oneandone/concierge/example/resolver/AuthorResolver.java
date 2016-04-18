@@ -1,13 +1,8 @@
 package net.oneandone.concierge.example.resolver;
 
 import net.oneandone.concierge.api.Element;
-import net.oneandone.concierge.api.Group;
-import net.oneandone.concierge.api.filter.AddressFilter;
 import net.oneandone.concierge.api.filter.Filters;
-import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.BasicGroupResolver;
-import net.oneandone.concierge.api.resolver.GroupResolver;
-import net.oneandone.concierge.example.model.Author;
 
 import java.time.ZonedDateTime;
 import java.util.List;
