@@ -6,8 +6,6 @@ import com.google.common.collect.Multimap;
 import net.oneandone.concierge.api.Element;
 import net.oneandone.concierge.api.Extension;
 import net.oneandone.concierge.api.Group;
-import net.oneandone.concierge.api.filter.AddressFilter;
-import net.oneandone.concierge.api.filter.Filter;
 import net.oneandone.concierge.api.filter.Filters;
 import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
@@ -17,7 +15,9 @@ import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 
 import javax.json.*;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.ZonedDateTime;
@@ -44,23 +44,12 @@ public class GenericApiResource {
     @OPTIONS
     @Path("/{uri:.*}")
     public Response getOptions(@PathParam("uri") String uri) {
-        Preconditions.checkNotNull(uri, "the URI may not be null");
-        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+        final ResourceIdentifier resourceIdentifier = ResourceIdentifier.parse(uri);
+        final String[] resolverPath = resourceIdentifier.completeHierarchy();
 
-        final String[] splittedUri = uri.split("/");
-        final String[] requestHierarchy;
-        if (splittedUri.length % 2 == 0) {
-            requestHierarchy = new String[splittedUri.length / 2];
-        } else {
-            requestHierarchy = new String[(splittedUri.length) / 2 + 1];
-        }
-        for (int i = 0; i < splittedUri.length; i += 2) {
-            requestHierarchy[i / 2] = splittedUri[i];
-        }
-
-        final Optional<GroupResolver> groupResolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
+        final Optional<GroupResolver> groupResolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
         if (!groupResolver.isPresent()) {
-            final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
+            final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
             if (!extensionResolver.isPresent()) {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
@@ -71,13 +60,19 @@ public class GenericApiResource {
 
     @GET
     @Path("/{uri:.*}")
-    public Response getResource(@PathParam("uri") String uri,
-                                @QueryParam("page") Integer page,
-                                @QueryParam("per_page") Integer perPage,
-                                @QueryParam("show") List<String> show) {
-        final OptionalInt pageOptional = Optional.ofNullable(page).map(OptionalInt::of).orElseGet(OptionalInt::empty);
-        final OptionalInt perPageOptional = Optional.ofNullable(perPage).map(OptionalInt::of).orElseGet(OptionalInt::empty);
-        final ApiResponse apiResponse = getResponse(uri, pageOptional, perPageOptional, show.toArray(new String[show.size()]));
+    public Response getResource(@Context HttpServletRequest request,
+                                @PathParam("uri") String uri) {
+        // get all query parameters
+        final Multimap<String, String> parametersMultimap = HashMultimap.create();
+        final Map<String, String[]> requestParameters = request.getParameterMap();
+        for (Map.Entry<String, String[]> entry : requestParameters.entrySet()) {
+            parametersMultimap.putAll(entry.getKey(), Arrays.asList(entry.getValue()));
+        }
+
+        // resolve resource identifier
+        final ResourceIdentifier resourceIdentifier = ResourceIdentifier.parse(uri, parametersMultimap);
+
+        final ApiResponse apiResponse = getResponse(resourceIdentifier);
         if (apiResponse == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -96,88 +91,63 @@ public class GenericApiResource {
     }
 
     /**
-     * Creates a response for the specified uri.
+     * Creates a response for the specified resourceIdentifier.
      *
-     * @param uri        the URI
-     * @param page       the optional page
-     * @param perPage    the optional per page limit
-     * @param extensions an array of all requested extensions
+     * @param resourceIdentifier the URI
      * @return the response or null
      */
-    private ApiResponse getResponse(final String uri, final OptionalInt page, final OptionalInt perPage, final String... extensions) {
-        Preconditions.checkNotNull(uri, "the URI may not be null");
-        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
-
+    private ApiResponse getResponse(final ResourceIdentifier resourceIdentifier) {
         // return root groups
-        if (uri.isEmpty()) {
+        if (resourceIdentifier.empty()) {
             final List<String> rootGroups = groupResolvers.stream().filter(r -> r.hierarchy().length == 1).map(GroupResolver::name).collect(Collectors.toList());
-            return ApiResponse.create(getLinks(new String[0], rootGroups, Collections.emptyList()), ZonedDateTime.now());
+            return ApiResponse.create(getLinks(resourceIdentifier, rootGroups, Collections.emptyList()), ZonedDateTime.now());
         }
 
-        String[] rawUri = uri.split("/");
-        return getResponse(rawUri, new String[0], rawUri, null, page, perPage, extensions);
+        return getResponse(resourceIdentifier, null);
     }
 
     /**
      * Returns the JSON representation for the specified {@code addresses} wrapped in a {@link ApiResponse} or {@code null} if no resource could be found for the specified address.
      *
-     * @param rawUri     the raw URI
-     * @param addresses  the array of addresses
      * @param parent     the parent element or {@code null} at the root of the resource graph
-     * @param page       the optional page
-     * @param perPage    the optional per page limit
-     * @param extensions an array of all requested extensions
      * @return the response or {@code null}
      */
-    private ApiResponse getResponse(final String[] rawUri, final String[] processedHierarchy, final String[] addresses, final Element parent, OptionalInt page, OptionalInt perPage, final String... extensions) {
-        Preconditions.checkNotNull(addresses, "the addresses may not be null");
-        Preconditions.checkArgument(addresses.length > 0, "the addresses may not be empty");
+    private ApiResponse getResponse(final ResourceIdentifier resourceIdentifier, final Element parent) {
+        final String[] resolverHierarchy = resourceIdentifier.hierarchy();
 
-        if (addresses.length > 0) {
-            final String[] requestHierarchy = Arrays.copyOf(processedHierarchy, processedHierarchy.length + 1);
-            requestHierarchy[requestHierarchy.length - 1] = addresses[0];
+        final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverHierarchy)).findAny();
 
-            final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
-
-            if (resolver.isPresent()) {
-                return getGroupResponse(rawUri, requestHierarchy, addresses, parent, page, perPage, resolver.get(), extensions);
-            } else {
-                final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
-                if (parent != null && extensionResolver.isPresent()) {
-                    final Optional<Extension> extension = extensionResolver.get().resolve(parent);
-                    if (extension.isPresent()) {
-                        return ApiResponse.create(extension.get().content(), extension.get().lastModified());
-                    }
-                    return null;
-                } else {
-                    return null;
+        if (resolver.isPresent()) {
+            return getGroupResponse(resourceIdentifier, parent, resolver.get());
+        } else {
+            final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverHierarchy)).findAny();
+            if (parent != null && extensionResolver.isPresent()) {
+                final Optional<Extension> extension = extensionResolver.get().resolve(parent);
+                if (extension.isPresent()) {
+                    return ApiResponse.create(extension.get().content(), extension.get().lastModified());
                 }
+                return null;
+            } else {
+                return null;
             }
         }
-        return null;
     }
 
     /**
      * Returns the response for a {@link Group} or {@link Element}.
      *
-     * @param rawUri     the raw URI
-     * @param addresses  the array of addresses
      * @param parent     the parent element or {@code null} at the root of the resource graph
-     * @param page       the optional page
-     * @param perPage    the optional per page limit
      * @param resolver   the resolver for the group with the specified {@code groupName}
-     * @param extensions an array of all requested extensions
      * @return the response
      */
-    private ApiResponse getGroupResponse(String[] rawUri, final String[] requestHierarchy, String[] addresses, Element parent, OptionalInt page, OptionalInt perPage, GroupResolver resolver, String... extensions) {
-        final Group group = resolver.elements(parent, initializeFilters(addresses, page, perPage));
+    private ApiResponse getGroupResponse(final ResourceIdentifier resourceIdentifier, Element parent, GroupResolver resolver) {
+        final Filters filters = resourceIdentifier.filters();
+        final Group group = resolver.elements(parent, filters);
 
         final Multimap<Element, Extension> extensionMultimap = HashMultimap.create();
-        for (final String extension : extensions) {
-            final String[] extensionRequestHierarchy = Arrays.copyOf(requestHierarchy, requestHierarchy.length + 1);
-            extensionRequestHierarchy[extensionRequestHierarchy.length - 1] = extension;
-
-            final List<ExtensionResolver> extensionResolvers = this.extensionResolvers.stream().filter(e -> Arrays.equals(e.hierarchy(), extensionRequestHierarchy)).collect(Collectors.toList());
+        for (final String extension : resourceIdentifier.extensions()) {
+            final String[] extendedResolverHierrchy = resourceIdentifier.extendedHierarchy(extension);
+            final List<ExtensionResolver> extensionResolvers = this.extensionResolvers.stream().filter(e -> Arrays.equals(e.hierarchy(), extendedResolverHierrchy)).collect(Collectors.toList());
             for (final ExtensionResolver extensionResolver : extensionResolvers) {
                 final Map<Element, Extension> resolvedExtensions = extensionResolver.resolve(group);
                 for (final Map.Entry<Element, Extension> elementExtensionEntry : resolvedExtensions.entrySet()) {
@@ -186,34 +156,32 @@ public class GenericApiResource {
             }
         }
 
-        final String[] restOfUri;
-
-        if (addresses.length > 2) {
-            restOfUri = Arrays.copyOfRange(addresses, 2, addresses.length);
-        } else {
-            restOfUri = new String[0];
-        }
-
-        // Unique by URL concept: group/element/group/element/...
-        final boolean uniqueElement = addresses.length >= 2;
-
-        if (uniqueElement) {
+        if (resourceIdentifier.hasElementIdentifier()) {
             if (group != null && !group.elements().isEmpty()) {
                 final Element element = group.elements().get(0);
-                return ApiResponse.create(getExtendedJsonStructure(rawUri, requestHierarchy, restOfUri, element, extensions, extensionMultimap.get(element)), element.lastModified());
+                return ApiResponse.create(getExtendedJsonStructure(resourceIdentifier, element, extensionMultimap.get(element)), element.lastModified());
             } else {
                 return null;
             }
         } else {
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for (final Element element : group.elements()) {
-                final String[] uniqueRawUri = Arrays.copyOf(rawUri, rawUri.length + 1);
-                uniqueRawUri[rawUri.length] = element.address();
-                arrayBuilder.add(getExtendedJsonStructure(uniqueRawUri, requestHierarchy, restOfUri, element, extensions, extensionMultimap.get(element)));
+                arrayBuilder.add(getExtendedJsonStructure(resourceIdentifier, element, extensionMultimap.get(element)));
             }
 
             if (resolver.defaultPageSize() > 0) {
-                final ApiResourcePaging paging = ApiResourcePaging.builder().group(addresses[0]).page(page.orElse(1)).perPage(perPage.orElse(resolver.defaultPageSize())).total(group.total()).build();
+                final int page;
+                final int perPage;
+                final Optional<PageFilter> pageFilter = filters.get(PageFilter.class);
+                if (pageFilter.isPresent()) {
+                    page = pageFilter.get().getPage();
+                    perPage = pageFilter.get().getPerPage().orElse(resolver.defaultPageSize());
+                } else {
+                    page = 1;
+                    perPage = resolver.defaultPageSize();
+                }
+
+                final ApiResourcePaging paging = ApiResourcePaging.builder().group(resourceIdentifier.groupIdentifier()).page(page).perPage(perPage).total(group.total()).build();
                 return ApiResponse.create(arrayBuilder.build(), group.lastModified(), paging);
             }
             return ApiResponse.create(arrayBuilder.build(), group.lastModified());
@@ -222,23 +190,21 @@ public class GenericApiResource {
 
     /**
      * Returns the {@link JsonStructure} for the parent element if {@code restOfUri} is empty or else forwards the request to
-     * {@link #getResponse(String[], String[], String[], Element, OptionalInt, OptionalInt, String...)} with the current parent element and selects recursively the result of it.
+     * {@link #getResponse(ResourceIdentifier, Element)} with the current parent element and selects recursively the result of it.
      *
-     * @param rawUri             the raw URI
-     * @param restOfUri          the optional rest of the uri
      * @param parent             the parent element
-     * @param extensions         an array of all requested extensions
      * @param resolvedExtensions a list of all resolved extensions so far
      * @return the JSON representation for the parent element or the result of a forwarded request
      */
-    private JsonStructure getExtendedJsonStructure(final String[] rawUri, final String[] requestHierarchy, final String[] restOfUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
-        if (restOfUri.length > 0) {
-            final ApiResponse response = getResponse(rawUri, requestHierarchy, restOfUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
+    private JsonStructure getExtendedJsonStructure(final ResourceIdentifier resourceIdentifier, final Element parent, final Collection<Extension> resolvedExtensions) {
+        if (resourceIdentifier.hasNextScope()) {
+            final ApiResponse response = getResponse(resourceIdentifier.next(), parent);
             if (response != null) {
                 return response.getObject();
             }
             return null;
         } else {
+            final ResourceIdentifier extendedResourceIdentifier = resourceIdentifier.extend(parent);
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
             // clone JSON element
@@ -253,44 +219,43 @@ public class GenericApiResource {
             }
 
             // check for missing extensions and add them
-            for (final String extension : extensions) {
-                final String[] extensionRequestHierarchy = Arrays.copyOf(requestHierarchy, requestHierarchy.length + 1);
-                extensionRequestHierarchy[extensionRequestHierarchy.length - 1] = extension;
+            if (extendedResourceIdentifier.hasElementIdentifier()) {
+                for (final String extension : extendedResourceIdentifier.extensions()) {
+                    final ResourceIdentifier extendedIdentifier = extendedResourceIdentifier.extend(extension);
 
-                final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extensionRequestHierarchy)).findAny();
-                if (resolver.isPresent()) {
-                    final ApiResponse apiResponse = getResponse(rawUri, requestHierarchy, new String[]{extension}, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
-                    if (apiResponse != null) {
-                        objectBuilder.add(extension, apiResponse.getObject());
+                    final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extendedIdentifier.completeHierarchy())).findAny();
+                    if (resolver.isPresent()) {
+                        final ApiResponse apiResponse = getResponse(extendedIdentifier);
+                        if (apiResponse != null && apiResponse.getObject() != null) {
+                            objectBuilder.add(extension, apiResponse.getObject());
+                        }
                     }
                 }
             }
 
-            if (rawUri.length % 2 == 0) {
-                final List<String> availableSubgroups = groupResolvers.stream()
-                        .filter(r -> r.hierarchy().length == requestHierarchy.length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), requestHierarchy))
-                        .map(r -> r.hierarchy()[r.hierarchy().length - 1])
-                        .collect(Collectors.toList());
-                final List<String> availableExtensions = extensionResolvers.stream()
-                        .filter(r -> r.hierarchy().length == requestHierarchy.length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), requestHierarchy))
-                        .map(r -> r.hierarchy()[r.hierarchy().length - 1])
-                        .collect(Collectors.toList());
-                if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
-                    objectBuilder.add("links", getLinks(rawUri, availableSubgroups, availableExtensions));
-                }
+            final List<String> availableSubgroups = groupResolvers.stream()
+                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
+                    .map(r -> r.hierarchy()[r.hierarchy().length - 1])
+                    .collect(Collectors.toList());
+            final List<String> availableExtensions = extensionResolvers.stream()
+                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
+                    .map(r -> r.hierarchy()[r.hierarchy().length - 1])
+                    .collect(Collectors.toList());
+            if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
+                objectBuilder.add("links", getLinks(resourceIdentifier.extend(parent), availableSubgroups, availableExtensions));
             }
 
             return objectBuilder.build();
         }
     }
 
-    private static JsonObject getLinks(final String[] address, final List<String> availableSubgroups, final List<String> availableExtensions) {
+    private static JsonObject getLinks(final ResourceIdentifier resourceIdentifier, final List<String> availableSubgroups, final List<String> availableExtensions) {
         final JsonObjectBuilder linksBuilder = Json.createObjectBuilder();
 
         if (!availableSubgroups.isEmpty()) {
             final JsonObjectBuilder groupLinkBuilder = Json.createObjectBuilder();
             for (final String availableSubgroup : availableSubgroups) {
-                groupLinkBuilder.add(availableSubgroup, "/" + Stream.concat(Arrays.stream(address), Stream.of(availableSubgroup)).collect(Collectors.joining("/")));
+                groupLinkBuilder.add(availableSubgroup, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableSubgroup)).collect(Collectors.joining("/")));
             }
             linksBuilder.add("groups", groupLinkBuilder.build());
         }
@@ -298,32 +263,12 @@ public class GenericApiResource {
         if (!availableExtensions.isEmpty()) {
             final JsonObjectBuilder extensionLinkBuilder = Json.createObjectBuilder();
             for (final String availableExtension : availableExtensions) {
-                extensionLinkBuilder.add(availableExtension, "/" + Stream.concat(Arrays.stream(address), Stream.of(availableExtension)).collect(Collectors.joining("/")));
+                extensionLinkBuilder.add(availableExtension, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableExtension)).collect(Collectors.joining("/")));
             }
             linksBuilder.add("extensions", extensionLinkBuilder.build());
         }
 
         return linksBuilder.build();
-    }
-
-    /**
-     * Returns a list of all {@link Filter} for the specified {@code resolver}.
-     *
-     * @param addresses the addresses array
-     * @param page      the optional page
-     * @param perPage   the optional per page limit
-     * @return the list of all filters specified for the resolver
-     */
-    private Filters initializeFilters(final String[] addresses, final OptionalInt page, final OptionalInt perPage) {
-        final Filters.Builder builder = Filters.Builder.initialize();
-
-        if (addresses.length == 1 && (page.isPresent() || perPage.isPresent())) {
-            builder.add(new PageFilter(page.orElse(1), perPage));
-        }
-        if (addresses.length > 1) {
-            builder.add(new AddressFilter(addresses[1]));
-        }
-        return builder.build();
     }
 
 }
