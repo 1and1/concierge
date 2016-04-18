@@ -19,7 +19,7 @@ public interface Resolver {
      * Returns the full hierarchy of types for the resolved group or extension.
      * <p />
      * <b>Example:</b>
-     * For the URI {@code group1/id1/group2/id2/extension} the hiearchy must be {@code ("group1", "group2", "extension")}.
+     * For the URI {@code group1/id1/group2/id2/extension} the hierarchy must be {@code ("group1", "group2", "extension")}.
      * <p />
      * The returned hierarchy must not be {@code null} or empty.
      *
