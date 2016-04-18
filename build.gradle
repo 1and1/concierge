@@ -1,4 +1,6 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 apply plugin: 'jacoco'
 
 group = 'net.oneandone'
@@ -43,5 +45,118 @@ jacocoTestReport {
 
 javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+if (hasProperty('signing.keyId') && hasProperty('signing.password') && hasProperty('signing.secretKeyRingFile')) {
+    signing {
+        sign configurations.archives
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// Version of artifact as defined by the task graph
+// --------------------------------------------------------------------------------------------------------------------
+gradle.taskGraph.whenReady {taskGraph ->
+    if ("${version}".matches("[0-9]+\\.[0-9]+\\-SNAPSHOT") && taskGraph.hasTask(':release')) {
+        def gitRevision = 'git rev-list HEAD --count'.execute().text.trim()
+        version = "${version}".replace('-SNAPSHOT', '') + ".${gitRevision}"
+
+        configurations.testCompile.dependencies.each { dependency ->
+            if (dependency.version.contains("SNAPSHOT")) {
+                throw new RuntimeException("project contains SNAPSHOT dependency in artifact ${dependency.group}:${dependency.name}:${dependency.version}")
+            }
+        }
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// Release tasks to 'The Central Repository'
+// --------------------------------------------------------------------------------------------------------------------
+
+// credentials to 'The Central Repository' (http://central.sonatype.org/pages/ossrh-guide.html)
+if (hasProperty('ossrhUsername') && hasProperty('ossrhPassword')) {
+    task release(dependsOn: uploadArchives) << {
+        println "build release with version ${version}"
+    }
+
+    task snapshot(dependsOn: uploadArchives) << {
+        println "build snapshot with version ${version}"
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                pom.project {
+                    name 'concierge'
+                    packaging 'jar'
+                    // optionally artifactId can be defined here
+                    description 'API gateway framework'
+                    url 'https://github.com/1and1/concierge'
+
+                    scm {
+                        connection 'https://github.com/1and1/concierge'
+                        developerConnection 'https://github.com/1and1/concierge.git'
+                        url 'https://github.com/1and1/concierge'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    organization {
+                        name '1&1 Internet Inc.'
+                        url 'http://www.1and1.com/'
+                    }
+
+                    developers {
+                        developer {
+                            id 'Germandrummer92'
+                            name 'Daniel Draper'
+                        }
+                        developer {
+                            id 'netdevfighter'
+                            name 'Tobias Lindenmann'
+                        }
+                        developer {
+                            id 'piranha87'
+                            name 'Andreas Runk'
+                        }
+                        developer {
+                            id 'bitionaire'
+                            name 'Johann Böhler'
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
