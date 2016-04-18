@@ -41,6 +41,15 @@ import java.util.OptionalInt;
  */
 public class ResourceIdentifier {
 
+    /** The complete URI. */
+    private final String[] uri;
+
+    /** The start index of the current scope (see {@link #next()}. */
+    private final int startIndex;
+
+    /** The request parameters. */
+    private final Multimap<String, String> parameters;
+
     /**
      * Parses the specified URI and returns the resource identifier.
      *
@@ -61,15 +70,6 @@ public class ResourceIdentifier {
     public static ResourceIdentifier parse(final String uri, final Multimap<String, String> parameters) {
         return new ResourceIdentifier(uri, parameters);
     }
-
-    /** The complete URI. */
-    private final String[] uri;
-
-    /** The start index of the current scope (see {@link #next()}. */
-    private final int startIndex;
-
-    /** The request parameters. */
-    private final Multimap<String, String> parameters;
 
     private ResourceIdentifier(final String uri, final Multimap<String, String> parameters) {
         Preconditions.checkNotNull(uri, "the URI may not be null");
@@ -270,25 +270,23 @@ public class ResourceIdentifier {
             builder.add(new AddressFilter(elementIdentifier()));
         }
 
-        if (!hasNextScope()) {
-            if (parameters.containsKey("page") || parameters.containsKey("per_page")) {
-                final Collection<String> pageValues = parameters.get("page");
-                final int page;
-                if (pageValues.isEmpty()) {
-                    page = 1;
-                } else {
-                    page = Integer.parseInt(pageValues.stream().findFirst().get());
-                }
-
-                final Collection<String> perPageValues = parameters.get("per_page");
-                final OptionalInt perPage;
-                if (perPageValues.isEmpty()) {
-                    perPage = OptionalInt.empty();
-                } else {
-                    perPage = OptionalInt.of(Integer.parseInt(perPageValues.stream().findFirst().get()));
-                }
-                builder.add(new PageFilter(page, perPage));
+        if (!hasNextScope() && (parameters.containsKey("page") || parameters.containsKey("per_page"))) {
+            final Collection<String> pageValues = parameters.get("page");
+            final int page;
+            if (pageValues.isEmpty()) {
+                page = 1;
+            } else {
+                page = Integer.parseInt(pageValues.stream().findFirst().get());
             }
+
+            final Collection<String> perPageValues = parameters.get("per_page");
+            final OptionalInt perPage;
+            if (perPageValues.isEmpty()) {
+                perPage = OptionalInt.empty();
+            } else {
+                perPage = OptionalInt.of(Integer.parseInt(perPageValues.stream().findFirst().get()));
+            }
+            builder.add(new PageFilter(page, perPage));
         }
 
         return builder.build();

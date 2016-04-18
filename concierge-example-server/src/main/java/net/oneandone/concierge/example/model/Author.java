@@ -30,7 +30,7 @@ public class Author implements Element {
 
     @Override
     public JsonObject content() {
-        return Json.createObjectBuilder().add("name", name).build();
+        return Json.createObjectBuilder().add("name", name).add("nationality", nationality).build();
     }
 
     @Override
