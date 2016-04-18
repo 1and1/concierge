@@ -10,6 +10,7 @@ import net.oneandone.concierge.api.filter.Filters;
 import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
+import net.oneandone.concierge.api.resolver.Resolver;
 import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
@@ -236,21 +237,21 @@ public class GenericApiResource {
                 }
             }
 
-
-            final List<String> availableSubgroups = groupResolvers.stream()
-                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
-                    .map(r -> r.hierarchy()[r.hierarchy().length - 1])
-                    .collect(Collectors.toList());
-            final List<String> availableExtensions = extensionResolvers.stream()
-                    .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
-                    .map(r -> r.hierarchy()[r.hierarchy().length - 1])
-                    .collect(Collectors.toList());
+            final List<String> availableSubgroups = getAvailableSubResolver(fullResourceIdentifier, groupResolvers);
+            final List<String> availableExtensions = getAvailableSubResolver(fullResourceIdentifier, extensionResolvers);
             if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
                 objectBuilder.add("links", getLinks(fullResourceIdentifier, availableSubgroups, availableExtensions));
             }
 
             return objectBuilder.build();
         }
+    }
+
+    private static List<String> getAvailableSubResolver(final ResourceIdentifier resourceIdentifier, final List<? extends Resolver> resolvers) {
+        return resolvers.stream()
+                .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
+                .map(r -> r.hierarchy()[r.hierarchy().length - 1])
+                .collect(Collectors.toList());
     }
 
     private static JsonObject getLinks(final ResourceIdentifier resourceIdentifier, final List<String> availableSubgroups, final List<String> availableExtensions) {
