@@ -203,7 +203,13 @@ public class GenericApiResource {
             }
             return null;
         } else {
-            final ResourceIdentifier extendedResourceIdentifier = resourceIdentifier.extend(parent);
+            final ResourceIdentifier fullResourceIdentifier;
+            if (resourceIdentifier.hasElementIdentifier()) {
+                fullResourceIdentifier = resourceIdentifier;
+            } else {
+                fullResourceIdentifier = resourceIdentifier.extend(parent);
+            }
+
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
 
             // clone JSON element
@@ -218,19 +224,18 @@ public class GenericApiResource {
             }
 
             // check for missing extensions and add them
-            if (extendedResourceIdentifier.hasElementIdentifier()) {
-                for (final String extension : extendedResourceIdentifier.extensions()) {
-                    final ResourceIdentifier extendedIdentifier = extendedResourceIdentifier.extend(extension);
+            for (final String extension : fullResourceIdentifier.extensions()) {
+                final ResourceIdentifier extendedIdentifier = fullResourceIdentifier.extend(extension);
 
-                    final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extendedIdentifier.completeHierarchy())).findAny();
-                    if (resolver.isPresent()) {
-                        final ApiResponse apiResponse = getResponse(extendedIdentifier);
-                        if (apiResponse != null && apiResponse.getObject() != null) {
-                            objectBuilder.add(extension, apiResponse.getObject());
-                        }
+                final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extendedIdentifier.completeHierarchy())).findAny();
+                if (resolver.isPresent()) {
+                    final ApiResponse apiResponse = getResponse(extendedIdentifier);
+                    if (apiResponse != null && apiResponse.getObject() != null) {
+                        objectBuilder.add(extension, apiResponse.getObject());
                     }
                 }
             }
+
 
             final List<String> availableSubgroups = groupResolvers.stream()
                     .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
@@ -241,7 +246,7 @@ public class GenericApiResource {
                     .map(r -> r.hierarchy()[r.hierarchy().length - 1])
                     .collect(Collectors.toList());
             if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
-                objectBuilder.add("links", getLinks(resourceIdentifier.extend(parent), availableSubgroups, availableExtensions));
+                objectBuilder.add("links", getLinks(fullResourceIdentifier, availableSubgroups, availableExtensions));
             }
 
             return objectBuilder.build();

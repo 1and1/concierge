@@ -234,6 +234,10 @@ public class ResourceIdentifier {
 
     /**
      * Extends the current resource identifier by the specified element {@link Element#address()}.
+     * <p/>
+     * The current resource identifier can only be extended if no element identifier (see {@link #hasElementIdentifier()}).
+     * If this resource identifier should be extended by an element and an element identifier already exists an
+     * {@link IllegalArgumentException} will be thrown.
      *
      * @param element the element to use for the extension
      * @return the extended resource identifier
@@ -244,8 +248,7 @@ public class ResourceIdentifier {
             newUri[startIndex + 1] = element.address();
             return new ResourceIdentifier(newUri, parameters, startIndex);
         }
-        return this;
-        //throw new IllegalArgumentException("current resource identifier " + Arrays.toString(uri) + " is not expendable by an element");
+        throw new IllegalArgumentException("current resource identifier " + Arrays.toString(uri) + " is not expendable by an element");
     }
 
     /**
