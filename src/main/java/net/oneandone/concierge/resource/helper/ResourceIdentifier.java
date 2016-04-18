@@ -12,6 +12,33 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.OptionalInt;
 
+/**
+ * This class implements our resource identifier pattern.
+ * <p/>
+ * We have three types of resources:
+ * <ol>
+ * <li>{@link Element elements} are uniquely addressable resources</li>
+ * <li>{@link net.oneandone.concierge.api.Group groups} may contain multiple elements</li>
+ * <li>{@link net.oneandone.concierge.api.Extension extensions} may provided additional information for elements</li>
+ * </ol>
+ * Elements may also contain further groups, which leads us to a pattern how to address resources.
+ * <ul>
+ * <li>A resource identifier always starts with a group and may end anytime</li>
+ * <li>If something follows on a group it's always an element</li>
+ * <li>The next identifier to an element might be the name of a group or extension</li>
+ * <li>An extension must terminate the resource identifier</li>
+ * </ul>
+ * So a resource identifier might look like {@code group1/id1/group2/id2/extension}.
+ * <p/>
+ * The scope of a resource identifier is a pair of group and an optional element identifier or the address of an extension.
+ * In the example above we see three scopes:
+ * <ol>
+ * <li>{@code group1/id1}</li>
+ * <li>{@code group2/id2}</li>
+ * <li>and {@code extension}</li>
+ * </ol>
+ * The resource identifier will be initialized with scope 1) and will return the scope on call of this method.
+ */
 public class ResourceIdentifier {
 
     /**
