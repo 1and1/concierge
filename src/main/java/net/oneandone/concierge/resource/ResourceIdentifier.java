@@ -1,4 +1,4 @@
-package net.oneandone.concierge.resource.helper;
+package net.oneandone.concierge.resource;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMultimap;

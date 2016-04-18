@@ -11,7 +11,6 @@ import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.configuration.Resolvers;
-import net.oneandone.concierge.resource.helper.ResourceIdentifier;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 
