@@ -4,7 +4,8 @@ apply plugin: 'signing'
 apply plugin: 'jacoco'
 
 group = 'net.oneandone'
-version = '0.1-SNAPSHOT'
+archivesBaseName = 'concierge'
+version = '0.1'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -58,7 +59,7 @@ task sourcesJar(type: Jar) {
 }
 
 artifacts {
-    archives javadocJar, sourcesJar
+    archives jar, javadocJar, sourcesJar
 }
 
 if (hasProperty('signing.keyId') && hasProperty('signing.password') && hasProperty('signing.secretKeyRingFile')) {
@@ -68,14 +69,11 @@ if (hasProperty('signing.keyId') && hasProperty('signing.password') && hasProper
 }
 
 // --------------------------------------------------------------------------------------------------------------------
-// Version of artifact as defined by the task graph
+// Release tasks to 'The Central Repository'
 // --------------------------------------------------------------------------------------------------------------------
 gradle.taskGraph.whenReady {taskGraph ->
-    if ("${version}".matches("[0-9]+\\.[0-9]+\\-SNAPSHOT") && taskGraph.hasTask(':release')) {
-        def gitRevision = 'git rev-list HEAD --count'.execute().text.trim()
-        version = "${version}".replace('-SNAPSHOT', '') + ".${gitRevision}"
-
-        configurations.testCompile.dependencies.each { dependency ->
+    if (taskGraph.hasTask(':uploadArchives')) {
+        configurations.compile.dependencies.each { dependency ->
             if (dependency.version.contains("SNAPSHOT")) {
                 throw new RuntimeException("project contains SNAPSHOT dependency in artifact ${dependency.group}:${dependency.name}:${dependency.version}")
             }
@@ -83,20 +81,8 @@ gradle.taskGraph.whenReady {taskGraph ->
     }
 }
 
-// --------------------------------------------------------------------------------------------------------------------
-// Release tasks to 'The Central Repository'
-// --------------------------------------------------------------------------------------------------------------------
-
 // credentials to 'The Central Repository' (http://central.sonatype.org/pages/ossrh-guide.html)
 if (hasProperty('ossrhUsername') && hasProperty('ossrhPassword')) {
-    task release(dependsOn: uploadArchives) << {
-        println "build release with version ${version}"
-    }
-
-    task snapshot(dependsOn: uploadArchives) << {
-        println "build snapshot with version ${version}"
-    }
-
     uploadArchives {
         repositories {
             mavenDeployer {
