@@ -164,11 +164,14 @@ public class GenericApiResource {
                 return null;
             }
         } else {
+            final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+
             final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
             for (final Element element : group.elements()) {
                 arrayBuilder.add(getExtendedJsonStructure(resourceIdentifier, element, extensionMultimap.get(element)));
             }
 
+            objectBuilder.add(resolver.name(), arrayBuilder.build());
             if (resolver.defaultPageSize() > 0) {
                 final int page;
                 final int perPage;
@@ -182,9 +185,25 @@ public class GenericApiResource {
                 }
 
                 final ApiResourcePaging paging = ApiResourcePaging.builder().group(resourceIdentifier.groupIdentifier()).page(page).perPage(perPage).total(group.total()).build();
-                return ApiResponse.create(arrayBuilder.build(), group.lastModified(), paging);
+                final JsonObjectBuilder linksBuilder = Json.createObjectBuilder();
+
+                String linkPattern = "/" + Arrays.stream(resourceIdentifier.get()).collect(Collectors.joining("/")) + "?page=%d&perPage=%d";
+
+                linksBuilder.add("first", String.format(linkPattern, 1, perPage));
+                if (page > 1) {
+                    linksBuilder.add("previous", String.format(linkPattern, page - 1, perPage));
+                }
+
+                int lastPage = (group.total() / perPage) + 1;
+                if (page < lastPage) {
+                    linksBuilder.add("next", String.format(linkPattern, page + 1, perPage));
+                }
+                linksBuilder.add("last", String.format(linkPattern, lastPage, perPage));
+
+                objectBuilder.add("links", linksBuilder.build());
+                return ApiResponse.create(objectBuilder.build(), group.lastModified(), paging);
             }
-            return ApiResponse.create(arrayBuilder.build(), group.lastModified());
+            return ApiResponse.create(objectBuilder.build(), group.lastModified());
         }
     }
 

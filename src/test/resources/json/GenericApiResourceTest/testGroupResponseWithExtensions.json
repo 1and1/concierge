@@ -1,39 +1,46 @@
-[
-  {
-    "name": "Andreas Piranha87",
-    "links": {
-      "groups": {
-        "posts": "/users/andreas.piranha87/posts"
-      },
-      "extensions": {
-        "profile": "/users/andreas.piranha87/profile"
+{
+  "users": [
+    {
+      "name": "Andreas Piranha87",
+      "links": {
+        "groups": {
+          "posts": "/users/andreas.piranha87/posts"
+        },
+        "extensions": {
+          "profile": "/users/andreas.piranha87/profile"
+        }
       }
-    }
-  },
-  {
-    "name": "Johann Bitionaire",
-    "profile": {
-      "age": 29,
-      "gender": "male"
     },
-    "links": {
-      "groups": {
-        "posts": "/users/johann.bitionaire/posts"
+    {
+      "name": "Johann Bitionaire",
+      "profile": {
+        "age": 29,
+        "gender": "male"
       },
-      "extensions": {
-        "profile": "/users/johann.bitionaire/profile"
+      "links": {
+        "groups": {
+          "posts": "/users/johann.bitionaire/posts"
+        },
+        "extensions": {
+          "profile": "/users/johann.bitionaire/profile"
+        }
+      }
+    },
+    {
+      "name": "Tobias Netdevfighter",
+      "links": {
+        "groups": {
+          "posts": "/users/tobias.netdevfighter/posts"
+        },
+        "extensions": {
+          "profile": "/users/tobias.netdevfighter/profile"
+        }
       }
     }
-  },
-  {
-    "name": "Tobias Netdevfighter",
-    "links": {
-      "groups": {
-        "posts": "/users/tobias.netdevfighter/posts"
-      },
-      "extensions": {
-        "profile": "/users/tobias.netdevfighter/profile"
-      }
-    }
+  ],
+  "links": {
+    "first": "/users?page=1&perPage=3",
+    "next": "/users?page=2&perPage=3",
+    "last": "/users?page=2&perPage=3"
   }
-]
+}
