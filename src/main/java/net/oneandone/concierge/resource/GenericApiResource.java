@@ -43,7 +43,7 @@ public class GenericApiResource {
 
     @OPTIONS
     @Path("/{uri:.*}")
-    public Response getOptions(@PathParam("uri") String uri) {
+    public Response getOptions(@PathParam("uri") final String uri) {
         final ResourceIdentifier resourceIdentifier = ResourceIdentifier.parse(uri);
         final String[] resolverPath = resourceIdentifier.completeHierarchy();
 
@@ -60,8 +60,7 @@ public class GenericApiResource {
 
     @GET
     @Path("/{uri:.*}")
-    public Response getResource(@Context HttpServletRequest request,
-                                @PathParam("uri") String uri) {
+    public Response getResource(@Context final HttpServletRequest request, @PathParam("uri") final String uri) {
         // get all query parameters
         final Multimap<String, String> parametersMultimap = HashMultimap.create();
         final Map<String, String[]> requestParameters = request.getParameterMap();
@@ -146,8 +145,8 @@ public class GenericApiResource {
 
         final Multimap<Element, Extension> extensionMultimap = HashMultimap.create();
         for (final String extension : resourceIdentifier.extensions()) {
-            final String[] extendedResolverHierrchy = resourceIdentifier.extendedHierarchy(extension);
-            final List<ExtensionResolver> extensionResolvers = this.extensionResolvers.stream().filter(e -> Arrays.equals(e.hierarchy(), extendedResolverHierrchy)).collect(Collectors.toList());
+            final String[] extendedResolverHierarchy = resourceIdentifier.extendedHierarchy(extension);
+            final List<ExtensionResolver> extensionResolvers = this.extensionResolvers.stream().filter(e -> Arrays.equals(e.hierarchy(), extendedResolverHierarchy)).collect(Collectors.toList());
             for (final ExtensionResolver extensionResolver : extensionResolvers) {
                 final Map<Element, Extension> resolvedExtensions = extensionResolver.resolve(group);
                 for (final Map.Entry<Element, Extension> elementExtensionEntry : resolvedExtensions.entrySet()) {
