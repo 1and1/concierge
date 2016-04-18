@@ -22,17 +22,17 @@ public class Library {
     /** Flag indicating whether the demo data was initialized in {@link #initialize()}. */
     private static boolean initialized = false;
 
-    static Collection<Author> getAuthors() {
+    protected static Collection<Author> getAuthors() {
         initialize();
         return LIBRARY.keySet();
     }
 
-    static Collection<Book> getBooks(final Author author) {
+    protected static Collection<Book> getBooks(final Author author) {
         initialize();
         return LIBRARY.get(author).stream().map(e -> e.book).collect(Collectors.toList());
     }
 
-    static Optional<BookRating> getRating(final Book book) {
+    protected static Optional<BookRating> getRating(final Book book) {
         initialize();
         return LIBRARY.values().stream().filter(e -> e.book.equals(book)).map(e -> e.bookRating).findAny();
     }
