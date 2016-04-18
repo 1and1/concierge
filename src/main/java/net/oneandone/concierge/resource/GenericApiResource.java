@@ -114,12 +114,14 @@ public class GenericApiResource {
             return ApiResponse.create(getLinks(new String[0], rootGroups, Collections.emptyList()), ZonedDateTime.now());
         }
 
-        return getResponse(new String[0], uri.split("/"), null, page, perPage, extensions);
+        String[] rawUri = uri.split("/");
+        return getResponse(rawUri, new String[0], rawUri, null, page, perPage, extensions);
     }
 
     /**
      * Returns the JSON representation for the specified {@code addresses} wrapped in a {@link ApiResponse} or {@code null} if no resource could be found for the specified address.
      *
+     * @param rawUri     the raw URI
      * @param addresses  the array of addresses
      * @param parent     the parent element or {@code null} at the root of the resource graph
      * @param page       the optional page
@@ -127,7 +129,7 @@ public class GenericApiResource {
      * @param extensions an array of all requested extensions
      * @return the response or {@code null}
      */
-    private ApiResponse getResponse(final String[] processedHierarchy, final String[] addresses, final Element parent, OptionalInt page, OptionalInt perPage, final String... extensions) {
+    private ApiResponse getResponse(final String[] rawUri, final String[] processedHierarchy, final String[] addresses, final Element parent, OptionalInt page, OptionalInt perPage, final String... extensions) {
         Preconditions.checkNotNull(addresses, "the addresses may not be null");
         Preconditions.checkArgument(addresses.length > 0, "the addresses may not be empty");
 
@@ -138,7 +140,7 @@ public class GenericApiResource {
             final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
 
             if (resolver.isPresent()) {
-                return getGroupResponse(addresses, requestHierarchy, addresses, parent, page, perPage, resolver.get(), extensions);
+                return getGroupResponse(rawUri, requestHierarchy, addresses, parent, page, perPage, resolver.get(), extensions);
             } else {
                 final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), requestHierarchy)).findAny();
                 if (parent != null && extensionResolver.isPresent()) {
@@ -158,6 +160,7 @@ public class GenericApiResource {
     /**
      * Returns the response for a {@link Group} or {@link Element}.
      *
+     * @param rawUri     the raw URI
      * @param addresses  the array of addresses
      * @param parent     the parent element or {@code null} at the root of the resource graph
      * @param page       the optional page
@@ -219,8 +222,9 @@ public class GenericApiResource {
 
     /**
      * Returns the {@link JsonStructure} for the parent element if {@code restOfUri} is empty or else forwards the request to
-     * {@link #getResponse(String[], String[], Element, OptionalInt, OptionalInt, String...)} with the current parent element and selects recursively the result of it.
+     * {@link #getResponse(String[], String[], String[], Element, OptionalInt, OptionalInt, String...)} with the current parent element and selects recursively the result of it.
      *
+     * @param rawUri             the raw URI
      * @param restOfUri          the optional rest of the uri
      * @param parent             the parent element
      * @param extensions         an array of all requested extensions
@@ -229,7 +233,7 @@ public class GenericApiResource {
      */
     private JsonStructure getExtendedJsonStructure(final String[] rawUri, final String[] requestHierarchy, final String[] restOfUri, final Element parent, String[] extensions, final Collection<Extension> resolvedExtensions) {
         if (restOfUri.length > 0) {
-            final ApiResponse response = getResponse(requestHierarchy, restOfUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
+            final ApiResponse response = getResponse(rawUri, requestHierarchy, restOfUri, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
             if (response != null) {
                 return response.getObject();
             }
@@ -255,7 +259,7 @@ public class GenericApiResource {
 
                 final Optional<GroupResolver> resolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), extensionRequestHierarchy)).findAny();
                 if (resolver.isPresent()) {
-                    final ApiResponse apiResponse = getResponse(requestHierarchy, new String[]{extension}, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
+                    final ApiResponse apiResponse = getResponse(rawUri, requestHierarchy, new String[]{extension}, parent, OptionalInt.empty(), OptionalInt.empty(), extensions);
                     if (apiResponse != null) {
                         objectBuilder.add(extension, apiResponse.getObject());
                     }

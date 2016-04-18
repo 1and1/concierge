@@ -2,7 +2,7 @@ package net.oneandone.concierge.example.model;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
-import net.oneandone.concierge.api.Element;
+import net.oneandone.concierge.api.Extension;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -10,32 +10,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-@AllArgsConstructor
-@EqualsAndHashCode
-public class Author implements Element {
+@AllArgsConstructor @EqualsAndHashCode
+public class BookRating implements Extension {
 
-    private long id;
-    private String name;
-    private String nationality;
-
-    @Override
-    public String group() {
-        return "books";
-    }
-
-    @Override
-    public Long id() {
-        return id;
-    }
+    private String goodReads;
 
     @Override
     public JsonObject content() {
-        return Json.createObjectBuilder().add("name", name).build();
+        return Json.createObjectBuilder().add("goodreads.com", goodReads).build();
     }
 
     @Override
     public String address() {
-        return name.toLowerCase().replaceAll("[^a-z0-9\\s]", "").replaceAll("\\s", ".");
+        return "rating";
     }
 
     @Override
