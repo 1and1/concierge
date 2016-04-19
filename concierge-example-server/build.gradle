@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+group 'net.oneandone'
+version '0.1-SNAPSHOT'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+// set default encoding
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+mainClassName = "net.oneandone.concierge.example.Main"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile rootProject
+}

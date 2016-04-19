@@ -1,3 +1,11 @@
 {
-  "name": "Andreas Piranha87"
+  "name": "Andreas Piranha87",
+  "links": {
+    "groups": {
+      "posts": "/users/andreas.piranha87/posts"
+    },
+    "extensions": {
+      "profile": "/users/andreas.piranha87/profile"
+    }
+  }
 }

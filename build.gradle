@@ -1,8 +1,11 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 apply plugin: 'jacoco'
 
 group = 'net.oneandone'
-version = '0.1-SNAPSHOT'
+archivesBaseName = 'concierge'
+version = '0.1'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -24,6 +27,7 @@ dependencies {
 
     testCompile group: 'org.testng', name: 'testng', version: '6.9.6'
     testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.9.2'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
 }
 
 test {
@@ -42,5 +46,103 @@ jacocoTestReport {
 
 javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives jar, javadocJar, sourcesJar
+}
+
+if (hasProperty('signing.keyId') && hasProperty('signing.password') && hasProperty('signing.secretKeyRingFile')) {
+    signing {
+        sign configurations.archives
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// Release tasks to 'The Central Repository'
+// --------------------------------------------------------------------------------------------------------------------
+gradle.taskGraph.whenReady {taskGraph ->
+    if (taskGraph.hasTask(':uploadArchives')) {
+        configurations.compile.dependencies.each { dependency ->
+            if (dependency.version.contains("SNAPSHOT")) {
+                throw new RuntimeException("project contains SNAPSHOT dependency in artifact ${dependency.group}:${dependency.name}:${dependency.version}")
+            }
+        }
+    }
+}
+
+// credentials to 'The Central Repository' (http://central.sonatype.org/pages/ossrh-guide.html)
+if (hasProperty('ossrhUsername') && hasProperty('ossrhPassword')) {
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                pom.project {
+                    name 'concierge'
+                    packaging 'jar'
+                    // optionally artifactId can be defined here
+                    description 'API gateway framework'
+                    url 'https://github.com/1and1/concierge'
+
+                    scm {
+                        connection 'https://github.com/1and1/concierge'
+                        developerConnection 'https://github.com/1and1/concierge.git'
+                        url 'https://github.com/1and1/concierge'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    organization {
+                        name '1&1 Internet Inc.'
+                        url 'http://www.1and1.com/'
+                    }
+
+                    developers {
+                        developer {
+                            id 'Germandrummer92'
+                            name 'Daniel Draper'
+                        }
+                        developer {
+                            id 'netdevfighter'
+                            name 'Tobias Lindenmann'
+                        }
+                        developer {
+                            id 'piranha87'
+                            name 'Andreas Runk'
+                        }
+                        developer {
+                            id 'bitionaire'
+                            name 'Johann Böhler'
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 

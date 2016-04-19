@@ -5,13 +5,16 @@ import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.demo.resolver.PostResolver;
 import net.oneandone.concierge.demo.resolver.UserProfileExtensionResolver;
 import net.oneandone.concierge.demo.resolver.UserResolver;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -20,6 +23,8 @@ import static org.testng.Assert.assertNotNull;
 public class GenericApiResourceTest {
 
     private static GenericApiResource apiResource;
+
+    @Mock private HttpServletRequest request;
 
     @BeforeClass
     public static void setUpApiResource() {
@@ -34,9 +39,25 @@ public class GenericApiResourceTest {
         apiResource = new GenericApiResource(new Resolvers(groupResolvers, extensionResolvers));
     }
 
+    @BeforeMethod(alwaysRun=true)
+    public void injectDoubles() {
+        MockitoAnnotations.initMocks(this); //This could be pulled up into a shared base class
+    }
+
+    @Test
+    public void testRootResponse() throws Exception {
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "");
+
+        assertEquals(response.getStatus(), 200);
+        assertNotNull(response.getEntity());
+        assertEquals(response.getEntity(), JsonHelper.getJsonStringFor(GenericApiResourceTest.class, "testRootResponse"));
+    }
+
     @Test
     public void testGroupResponse() throws Exception {
-        final Response response = apiResource.getResource("users", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -49,7 +70,8 @@ public class GenericApiResourceTest {
 
     @Test
     public void testNestedGroupResponse() throws Exception {
-        final Response response = apiResource.getResource("users/johann.bitionaire/posts", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/johann.bitionaire/posts");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -59,7 +81,8 @@ public class GenericApiResourceTest {
 
     @Test
     public void testSingleRootElementResponse() throws Exception {
-        final Response response = apiResource.getResource("users/andreas.piranha87", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/andreas.piranha87");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -69,7 +92,8 @@ public class GenericApiResourceTest {
 
     @Test
     public void testSingleNestedElementResponse() throws Exception {
-        final Response response = apiResource.getResource("users/tobias.netdevfighter/posts/go-hard-or-go-home", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/tobias.netdevfighter/posts/go-hard-or-go-home");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -79,7 +103,8 @@ public class GenericApiResourceTest {
 
     @Test
     public void testExtensionResponse() throws Exception {
-        final Response response = apiResource.getResource("users/johann.bitionaire/profile", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/johann.bitionaire/profile");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -89,10 +114,11 @@ public class GenericApiResourceTest {
 
     @Test
     public void testGroupResponseWithExtensions() throws Exception {
-        final List<String> extensions = new ArrayList<>();
-        extensions.add("profile");
+        final Map<String, String[]> queryParameters = new HashMap<>(1);
+        queryParameters.put("show", new String[] { "profile" });
+        Mockito.when(request.getParameterMap()).thenReturn(queryParameters);
 
-        final Response response = apiResource.getResource("users", null, null, extensions);
+        final Response response = apiResource.getResource(request, "users");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -105,11 +131,13 @@ public class GenericApiResourceTest {
 
     @Test
     public void testGroupResponseWithExtensionsAndSubgroups() throws Exception {
-        final List<String> extensions = new ArrayList<>();
-        extensions.add("profile");
-        extensions.add("posts");
+        final Map<String, String[]> queryParameters = new HashMap<>(3);
+        queryParameters.put("show", new String[] { "profile", "posts" });
+        queryParameters.put("page", new String[] { "1" });
+        queryParameters.put("per_page", new String[] { "10" });
+        Mockito.when(request.getParameterMap()).thenReturn(queryParameters);
 
-        final Response response = apiResource.getResource("users", 1, 10, extensions);
+        final Response response = apiResource.getResource(request, "users");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -122,10 +150,11 @@ public class GenericApiResourceTest {
 
     @Test
     public void testElementResponseWithExtensions() throws Exception {
-        final List<String> extensions = new ArrayList<>();
-        extensions.add("profile");
+        final Map<String, String[]> queryParameters = new HashMap<>(1);
+        queryParameters.put("show", new String[] { "profile" });
+        Mockito.when(request.getParameterMap()).thenReturn(queryParameters);
 
-        final Response response = apiResource.getResource("users/johann.bitionaire", null, null, extensions);
+        final Response response = apiResource.getResource(request, "users/johann.bitionaire");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -135,7 +164,12 @@ public class GenericApiResourceTest {
 
     @Test
     public void testPageCount() throws Exception {
-        final Response response = apiResource.getResource("users", 2, 3, Collections.emptyList());
+        final Map<String, String[]> queryParameters = new HashMap<>(2);
+        queryParameters.put("page", new String[] { "2" });
+        queryParameters.put("per_page", new String[] { "3" });
+        Mockito.when(request.getParameterMap()).thenReturn(queryParameters);
+
+        final Response response = apiResource.getResource(request, "users");
 
         assertEquals(response.getStatus(), 200);
         assertNotNull(response.getEntity());
@@ -148,14 +182,16 @@ public class GenericApiResourceTest {
 
     @Test
     public void testResponseOfNonExistingResource() {
-        final Response response = apiResource.getResource("users/rick.grimes", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/rick.grimes");
 
         assertEquals(response.getStatus(), 404);
     }
 
     @Test
     public void testGettingUnknownGroup() {
-        final Response response = apiResource.getResource("users/daniel.germandrummer92/instruments", null, null, Collections.emptyList());
+        Mockito.when(request.getParameterMap()).thenReturn(Collections.emptyMap());
+        final Response response = apiResource.getResource(request, "users/daniel.germandrummer92/instruments");
 
         assertEquals(response.getStatus(), 404);
     }

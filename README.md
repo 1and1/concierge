@@ -9,3 +9,8 @@ The intended usage of the _Concierge_ framework is for having a REST API gateway
 The idea arised when we we're facing the problem of creating an API for a large XML that we would like to parse with [FraLaX](https://github.com/1and1/fralax).
 
 Once we'll have a running service we'll update the usage guidelines and the documentation for this repository.
+
+## Example
+
+In order to run the example execute 'gradle run' within the module 'concierge-example-server' and call 
+[http://localhost:8080/](http://localhost:8080/) with your favored REST client (e.g. _Postman_).
