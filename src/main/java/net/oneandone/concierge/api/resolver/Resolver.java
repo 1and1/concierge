@@ -1,5 +1,7 @@
 package net.oneandone.concierge.api.resolver;
 
+import java.util.Optional;
+
 /** A resolver for a {@link net.oneandone.concierge.api.Group} or {@link net.oneandone.concierge.api.Extension}. */
 public interface Resolver {
 
@@ -13,6 +15,10 @@ public interface Resolver {
             throw new IllegalStateException("hierarchy for resolver '" + this.getClass().getCanonicalName() + "' must not be null or empty");
         }
         return hierarchy()[hierarchy().length - 1];
+    }
+
+    default Optional<String> description() {
+        return Optional.empty();
     }
 
     /**

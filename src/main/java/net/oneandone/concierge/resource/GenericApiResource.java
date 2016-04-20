@@ -12,6 +12,7 @@ import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.api.resolver.Resolver;
 import net.oneandone.concierge.configuration.Resolvers;
+import net.oneandone.concierge.manual.MANUAL;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 
@@ -40,6 +41,25 @@ public class GenericApiResource {
 
         this.groupResolvers = resolvers.getGroupResolvers();
         this.extensionResolvers = resolvers.getExtensionResolvers();
+    }
+
+    @MANUAL
+    @Path("/{uri:.*}")
+    public Response getManual(@PathParam("uri") final String uri) {
+        final ResourceIdentifier resourceIdentifier = ResourceIdentifier.parse(uri);
+        final String[] resolverPath = resourceIdentifier.completeHierarchy();
+
+        final Optional<GroupResolver> groupResolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
+        if (groupResolver.isPresent()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        } else {
+            final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
+            if (extensionResolver.isPresent()) {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+        }
+
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @OPTIONS
