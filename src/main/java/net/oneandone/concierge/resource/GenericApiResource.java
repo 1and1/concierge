@@ -13,6 +13,7 @@ import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.api.resolver.Resolver;
 import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.manual.MANUAL;
+import net.oneandone.concierge.manual.ResourceManual;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 
@@ -51,12 +52,9 @@ public class GenericApiResource {
 
         final Optional<GroupResolver> groupResolver = groupResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
         if (groupResolver.isPresent()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        } else {
-            final Optional<ExtensionResolver> extensionResolver = extensionResolvers.stream().filter(r -> Arrays.equals(r.hierarchy(), resolverPath)).findAny();
-            if (extensionResolver.isPresent()) {
-                return Response.status(Response.Status.NOT_FOUND).build();
-            }
+            final List<Resolver> availableSubgroups = getAvailableSubResolver(resourceIdentifier, groupResolvers);
+            final List<Resolver> availableExtensions = getAvailableSubResolver(resourceIdentifier, extensionResolvers);
+            return Response.ok(ResourceManual.manual(groupResolver.get(), availableSubgroups, availableExtensions).content().toString()).build();
         }
 
         return Response.status(Response.Status.NOT_FOUND).build();
@@ -119,7 +117,7 @@ public class GenericApiResource {
     private ApiResponse getResponse(final ResourceIdentifier resourceIdentifier) {
         // return root groups
         if (resourceIdentifier.empty()) {
-            final List<String> rootGroups = groupResolvers.stream().filter(r -> r.hierarchy().length == 1).map(GroupResolver::name).collect(Collectors.toList());
+            final List<Resolver> rootGroups = groupResolvers.stream().filter(r -> r.hierarchy().length == 1).collect(Collectors.toList());
             return ApiResponse.create(getLinks(resourceIdentifier, rootGroups, Collections.emptyList()), ZonedDateTime.now());
         }
 
@@ -276,8 +274,8 @@ public class GenericApiResource {
                 }
             }
 
-            final List<String> availableSubgroups = getAvailableSubResolver(fullResourceIdentifier, groupResolvers);
-            final List<String> availableExtensions = getAvailableSubResolver(fullResourceIdentifier, extensionResolvers);
+            final List<Resolver> availableSubgroups = getAvailableSubResolver(fullResourceIdentifier, groupResolvers);
+            final List<Resolver> availableExtensions = getAvailableSubResolver(fullResourceIdentifier, extensionResolvers);
             if (!availableSubgroups.isEmpty() || !availableExtensions.isEmpty()) {
                 objectBuilder.add("links", getLinks(fullResourceIdentifier, availableSubgroups, availableExtensions));
             }
@@ -286,28 +284,27 @@ public class GenericApiResource {
         }
     }
 
-    private static List<String> getAvailableSubResolver(final ResourceIdentifier resourceIdentifier, final List<? extends Resolver> resolvers) {
+    private static List<Resolver> getAvailableSubResolver(final ResourceIdentifier resourceIdentifier, final List<? extends Resolver> resolvers) {
         return resolvers.stream()
                 .filter(r -> r.hierarchy().length == resourceIdentifier.hierarchy().length + 1 && Arrays.equals(Arrays.copyOfRange(r.hierarchy(), 0, r.hierarchy().length - 1), resourceIdentifier.hierarchy()))
-                .map(r -> r.hierarchy()[r.hierarchy().length - 1])
                 .collect(Collectors.toList());
     }
 
-    private static JsonObject getLinks(final ResourceIdentifier resourceIdentifier, final List<String> availableSubgroups, final List<String> availableExtensions) {
+    private static JsonObject getLinks(final ResourceIdentifier resourceIdentifier, final List<Resolver> availableSubgroups, final List<Resolver> availableExtensions) {
         final JsonObjectBuilder linksBuilder = Json.createObjectBuilder();
 
         if (!availableSubgroups.isEmpty()) {
             final JsonObjectBuilder groupLinkBuilder = Json.createObjectBuilder();
-            for (final String availableSubgroup : availableSubgroups) {
-                groupLinkBuilder.add(availableSubgroup, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableSubgroup)).collect(Collectors.joining("/")));
+            for (final Resolver availableSubgroup : availableSubgroups) {
+                groupLinkBuilder.add(availableSubgroup.name(), "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableSubgroup.name())).collect(Collectors.joining("/")));
             }
             linksBuilder.add("groups", groupLinkBuilder.build());
         }
 
         if (!availableExtensions.isEmpty()) {
             final JsonObjectBuilder extensionLinkBuilder = Json.createObjectBuilder();
-            for (final String availableExtension : availableExtensions) {
-                extensionLinkBuilder.add(availableExtension, "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableExtension)).collect(Collectors.joining("/")));
+            for (final Resolver availableExtension : availableExtensions) {
+                extensionLinkBuilder.add(availableExtension.name(), "/" + Stream.concat(Arrays.stream(resourceIdentifier.get()), Stream.of(availableExtension.name())).collect(Collectors.joining("/")));
             }
             linksBuilder.add("extensions", extensionLinkBuilder.build());
         }

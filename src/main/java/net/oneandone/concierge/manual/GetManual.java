@@ -19,11 +19,11 @@ public class GetManual implements OperationManual {
         final JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
         for (final QueryParameter queryParameter : queryParameters) {
             final JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            objectBuilder.add("id", queryParameter.getId());
-            objectBuilder.add("description", queryParameter.getDescription());
+            objectBuilder.add("id", queryParameter.id());
+            objectBuilder.add("description", queryParameter.description());
             arrayBuilder.add(objectBuilder.build());
         }
 
-        return arrayBuilder.build();
+        return Json.createObjectBuilder().add("query-parameters", arrayBuilder.build()).build();
     }
 }

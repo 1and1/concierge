@@ -2,6 +2,15 @@ server:
   applicationConnectors:
     - type: http
       port: 8080
+  allowedMethods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - HEAD
+    - OPTIONS
+    - MANUAL
 
 resolvers:
   group:

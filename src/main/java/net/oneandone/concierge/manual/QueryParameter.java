@@ -1,10 +1,13 @@
 package net.oneandone.concierge.manual;
 
-import lombok.Getter;
+import java.lang.annotation.*;
 
-public class QueryParameter {
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface QueryParameter {
 
-    @Getter private String id;
-    @Getter private String description;
+    String id();
+    String description();
 
 }
