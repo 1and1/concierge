@@ -37,7 +37,7 @@ import java.net.URL;
 @SuppressWarnings("WeakerAccess")
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Concierge {//extends Application<ApiGatewayConfiguration> {
+public class Concierge {
 
     /** The server environment. */
     private SparkServer api;
@@ -59,11 +59,8 @@ public class Concierge {//extends Application<ApiGatewayConfiguration> {
         return concierge;
     }
 
-    //@Override
-    public void run(final ApiGatewayConfiguration configuration/*, final Environment environment*/) throws Exception {
-        //environment.jersey().register(
+    public void run(final ApiGatewayConfiguration configuration) throws Exception {
         api = new SparkServer(configuration.getResolvers(), configuration.getPort());
-        //this.environment = environment;
     }
 
     /**
