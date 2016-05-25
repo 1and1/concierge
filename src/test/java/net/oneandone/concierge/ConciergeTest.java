@@ -8,7 +8,7 @@ public class ConciergeTest {
 
     @Test(timeOut = 15000L)
     public void testStartAndStop() throws Exception {
-        final URL configurationURL = ClassLoader.getSystemResource("server.yml");
+        final URL configurationURL = ClassLoader.getSystemResource("server.json");
         final Concierge server = Concierge.start(configurationURL);
         server.stop();
     }

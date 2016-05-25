@@ -1,11 +1,7 @@
-server:
-  applicationConnectors:
-    - type: http
-      port: 8080
-
 resolvers:
   group:
     - "net.oneandone.concierge.example.resolver.AuthorResolver"
     - "net.oneandone.concierge.example.resolver.BookResolver"
   extension:
     - "net.oneandone.concierge.example.resolver.BookRatingExtensionResolver"
+

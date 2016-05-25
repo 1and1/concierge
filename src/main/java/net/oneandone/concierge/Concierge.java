@@ -1,14 +1,12 @@
 package net.oneandone.concierge;
 
 import com.google.common.base.Preconditions;
-import io.dropwizard.Application;
-import io.dropwizard.setup.Environment;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.oneandone.concierge.api.Element;
 import net.oneandone.concierge.configuration.ApiGatewayConfiguration;
-import net.oneandone.concierge.resource.GenericApiResource;
+import net.oneandone.concierge.resource.SparkServer;
 
 import java.net.URL;
 
@@ -39,16 +37,10 @@ import java.net.URL;
 @SuppressWarnings("WeakerAccess")
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class Concierge extends Application<ApiGatewayConfiguration> {
+public class Concierge {//extends Application<ApiGatewayConfiguration> {
 
     /** The server environment. */
-    private Environment environment;
-
-    @Override
-    public void run(final ApiGatewayConfiguration configuration, final Environment environment) throws Exception {
-        environment.jersey().register(new GenericApiResource(configuration.getResolvers()));
-        this.environment = environment;
-    }
+    private SparkServer api;
 
     /**
      * Starts the concierge web server with the specified configuration.
@@ -61,11 +53,17 @@ public class Concierge extends Application<ApiGatewayConfiguration> {
      */
     public static Concierge start(final URL configurationFile) throws Exception {
         Preconditions.checkNotNull(configurationFile, "the configuration file URL may not be null");
-
         log.info("configuration file URL is {}", configurationFile);
         final Concierge concierge = new Concierge();
-        concierge.run("server", configurationFile.getFile());
+        concierge.run(ApiGatewayConfiguration.getConfiguration(configurationFile));
         return concierge;
+    }
+
+    //@Override
+    public void run(final ApiGatewayConfiguration configuration/*, final Environment environment*/) throws Exception {
+        //environment.jersey().register(
+        api = new SparkServer(configuration.getResolvers(), configuration.getPort());
+        //this.environment = environment;
     }
 
     /**
@@ -74,9 +72,9 @@ public class Concierge extends Application<ApiGatewayConfiguration> {
      * @throws IllegalStateException if the server wasn't started
      */
     public void stop() throws Exception {
-        if (environment != null) {
+        if (api != null) {
             log.debug("about to stop application");
-            environment.getApplicationContext().getServer().stop();
+            api.stop();
         } else {
             throw new IllegalStateException("environment may not be null on close");
         }

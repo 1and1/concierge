@@ -39,6 +39,7 @@ import java.util.OptionalInt;
  * </ol>
  * The resource identifier will be initialized with scope 1) and will return the scope on call of this method.
  */
+@SuppressWarnings("WeakerAccess")
 public class ResourceIdentifier {
 
     /** The complete URI. */
@@ -49,6 +50,24 @@ public class ResourceIdentifier {
 
     /** The request parameters. */
     private final Multimap<String, String> parameters;
+
+    private ResourceIdentifier(final String uri, final Multimap<String, String> parameters) {
+        Preconditions.checkNotNull(uri, "the URI may not be null");
+        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
+        if (uri.isEmpty()) {
+            this.uri = new String[0];
+        } else {
+            this.uri = uri.split("/");
+        }
+        this.parameters = ImmutableMultimap.copyOf(parameters);
+        this.startIndex = 0;
+    }
+
+    private ResourceIdentifier(final String[] uri, final Multimap<String, String> parameters, final int startIndex) {
+        this.uri = uri;
+        this.parameters = parameters;
+        this.startIndex = startIndex;
+    }
 
     /**
      * Parses the specified URI and returns the resource identifier.
@@ -69,24 +88,6 @@ public class ResourceIdentifier {
      */
     public static ResourceIdentifier parse(final String uri, final Multimap<String, String> parameters) {
         return new ResourceIdentifier(uri, parameters);
-    }
-
-    private ResourceIdentifier(final String uri, final Multimap<String, String> parameters) {
-        Preconditions.checkNotNull(uri, "the URI may not be null");
-        Preconditions.checkArgument(!uri.startsWith("/"), "the URI may not start with slash");
-        if (uri.isEmpty()) {
-            this.uri = new String[0];
-        } else {
-            this.uri = uri.split("/");
-        }
-        this.parameters = ImmutableMultimap.copyOf(parameters);
-        this.startIndex = 0;
-    }
-
-    private ResourceIdentifier(final String[] uri, final Multimap<String, String> parameters, final int startIndex) {
-        this.uri = uri;
-        this.parameters = parameters;
-        this.startIndex = startIndex;
     }
 
     /**

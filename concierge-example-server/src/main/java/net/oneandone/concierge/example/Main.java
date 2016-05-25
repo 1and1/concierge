@@ -17,7 +17,7 @@ public class Main {
      * @throws Exception thrown if execution of server failed
      */
     public static void main(final String... args) throws Exception {
-        final URL configurationURL = ClassLoader.getSystemResource("server.yml");
+        final URL configurationURL = ClassLoader.getSystemResource("server.json");
         Concierge.start(configurationURL);
     }
 

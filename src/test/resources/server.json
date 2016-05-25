@@ -1,0 +1,12 @@
+{
+  "port": 8080,
+  "resolvers": {
+    "group": [
+      "net.oneandone.concierge.demo.resolver.PostResolver",
+      "net.oneandone.concierge.demo.resolver.UserResolver"
+    ],
+    "extension": [
+      "net.oneandone.concierge.demo.resolver.UserProfileExtensionResolver"
+    ]
+  }
+}

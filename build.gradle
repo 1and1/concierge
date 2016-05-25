@@ -20,13 +20,16 @@ repositories {
 dependencies {
     // JSR 353: Json API
     compile group: 'org.glassfish', name: 'javax.json', version: '1.0.4'
-    compile group: 'io.dropwizard', name: 'dropwizard-core', version: '0.9.2'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.7.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.7.4'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.7.4'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.21'
 
     compile group: 'org.projectlombok', name: 'lombok', version: '1.16.4'
     compile group: 'com.google.guava', name: 'guava', version: '18.0'
+    compile group: 'com.sparkjava', name: 'spark-core', version: '2.5'
 
     testCompile group: 'org.testng', name: 'testng', version: '6.9.6'
-    testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.9.2'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
 }
 
@@ -71,7 +74,7 @@ if (hasProperty('signing.keyId') && hasProperty('signing.password') && hasProper
 // --------------------------------------------------------------------------------------------------------------------
 // Release tasks to 'The Central Repository'
 // --------------------------------------------------------------------------------------------------------------------
-gradle.taskGraph.whenReady {taskGraph ->
+gradle.taskGraph.whenReady { taskGraph ->
     if (taskGraph.hasTask(':uploadArchives')) {
         configurations.compile.dependencies.each { dependency ->
             if (dependency.version.contains("SNAPSHOT")) {
