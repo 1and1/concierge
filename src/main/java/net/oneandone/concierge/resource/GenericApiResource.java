@@ -12,13 +12,11 @@ import net.oneandone.concierge.api.filter.PageFilter;
 import net.oneandone.concierge.api.resolver.ExtensionResolver;
 import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.api.resolver.Resolver;
-import net.oneandone.concierge.configuration.Resolvers;
 import net.oneandone.concierge.resource.response.ApiResourcePaging;
 import net.oneandone.concierge.resource.response.ApiResponse;
 import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
-import spark.Spark;
 
 import javax.json.*;
 import javax.servlet.http.HttpServletResponse;
@@ -28,23 +26,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static spark.Spark.*;
-
 @Slf4j
 @SuppressWarnings("WeakerAccess")
-public class SparkServer {
+public class GenericApiResource {
 
     private final List<ExtensionResolver> extensionResolvers;
     private final List<GroupResolver> groupResolvers;
 
-    public SparkServer(final Resolvers resolvers, final int port) {
-        Preconditions.checkNotNull(resolvers, "the resolvers may not be null");
+    public GenericApiResource(final List<GroupResolver> groupResolvers, final List<ExtensionResolver> extensionResolvers) {
+        Preconditions.checkNotNull(groupResolvers, "the group resolvers may not be null");
+        Preconditions.checkNotNull(extensionResolvers, "the extension resolvers may not be null");
 
-        this.groupResolvers = resolvers.getGroupResolvers();
-        this.extensionResolvers = resolvers.getExtensionResolvers();
-        port(port);
-        get("*", this::getGetResponse);
-        options("*", this::getOptionsResponse);
+        this.groupResolvers = Collections.unmodifiableList(groupResolvers);
+        this.extensionResolvers = Collections.unmodifiableList(extensionResolvers);
     }
 
     private static List<String> getAvailableSubResolver(final ResourceIdentifier resourceIdentifier, final List<? extends Resolver> resolvers) {
@@ -323,10 +317,4 @@ public class SparkServer {
         }
     }
 
-    /**
-     * Stops this Spark Server Instance
-     */
-    public void stop() {
-        Spark.stop();
-    }
 }

@@ -1,14 +1,18 @@
 package net.oneandone.concierge;
 
 import com.google.common.base.Preconditions;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.oneandone.concierge.api.Element;
-import net.oneandone.concierge.configuration.ApiGatewayConfiguration;
-import net.oneandone.concierge.resource.SparkServer;
+import net.oneandone.concierge.api.resolver.ExtensionResolver;
+import net.oneandone.concierge.api.resolver.GroupResolver;
+import net.oneandone.concierge.api.resolver.Resolver;
+import net.oneandone.concierge.resource.GenericApiResource;
+import spark.Spark;
 
-import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 /**
  * The {@code Concierge} will help you to create an API gateway easily.
@@ -24,43 +28,22 @@ import java.net.URL;
  * There are {@link net.oneandone.concierge.api.resolver.GroupResolver} to resolve elements, and
  * {@link net.oneandone.concierge.api.resolver.ExtensionResolver} to resolve extensions for elements.
  * <p />
- * These resolvers will be dynamically created by the configuration specified in {@link #start(URL)}.
- * As this implementation is based on <a href="http://www.dropwizard.io/docs/">Dropwizard</a>, you can
- * learn more about the configuration file format in their <a href="http://www.dropwizard.io/0.9.2/docs/manual/configuration.html">
- * user manual</a>.
- * <p />
- * The additional properties for the configuration file are defined in {@link ApiGatewayConfiguration}. Basically
- * these properties are list of class names for the resolver implementations you want to use.
+ * You can setup a server and initialize it with your resolvers by running {@link Concierge#prepare()}.
  * <p />
  * You'll find an example implementation on <a href="https://github.com/1and1/concierge/tree/master/concierge-example-server">GitHub</a>.
  */
 @SuppressWarnings("WeakerAccess")
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Concierge {
 
-    /** The server environment. */
-    private SparkServer api;
+    private static final Object MUTEX = new Object();
+    private static boolean active = false;
 
-    /**
-     * Starts the concierge web server with the specified configuration.
-     * <p/>
-     * The call of this method is not blocking.
-     *
-     * @param configurationFile the configuration file URL
-     * @return the concierge web server instance
-     * @throws Exception thrown on any exception
-     */
-    public static Concierge start(final URL configurationFile) throws Exception {
-        Preconditions.checkNotNull(configurationFile, "the configuration file URL may not be null");
-        log.info("configuration file URL is {}", configurationFile);
-        final Concierge concierge = new Concierge();
-        concierge.run(ApiGatewayConfiguration.getConfiguration(configurationFile));
-        return concierge;
-    }
+    private Concierge(final List<GroupResolver> groupResolvers, final List<ExtensionResolver> extensionResolvers) {
+        GenericApiResource server = new GenericApiResource(groupResolvers, extensionResolvers);
 
-    public void run(final ApiGatewayConfiguration configuration) throws Exception {
-        api = new SparkServer(configuration.getResolvers(), configuration.getPort());
+        Spark.get("*", server::getGetResponse);
+        Spark.options("*", server::getOptionsResponse);
     }
 
     /**
@@ -69,11 +52,53 @@ public class Concierge {
      * @throws IllegalStateException if the server wasn't started
      */
     public void stop() throws Exception {
-        if (api != null) {
-            log.debug("about to stop application");
-            api.stop();
-        } else {
-            throw new IllegalStateException("environment may not be null on close");
+        log.debug("about to stop application");
+        Spark.stop();
+        synchronized (MUTEX) {
+            Concierge.active = false;
         }
+    }
+
+    public static ConciergeBuilder prepare() {
+        return new ConciergeBuilder();
+    }
+
+    public static class ConciergeBuilder {
+
+        private OptionalInt port = OptionalInt.empty();
+
+        private ConciergeBuilder () {}
+
+        public ConciergeBuilder port(final int port) {
+            Preconditions.checkArgument(port > 0 && port <= Short.MAX_VALUE, "specified port " + port + " is not within allowed range [0, " + Short.MAX_VALUE + "]");
+            this.port = OptionalInt.of(port);
+            return this;
+        }
+
+        public Concierge start(final Resolver... resolvers) throws Exception {
+            synchronized (MUTEX) {
+                if (!active) {
+                    if (port.isPresent()) {
+                        Spark.port(port.getAsInt());
+                    }
+
+                    final List<GroupResolver> groupResolvers = Arrays.stream(resolvers)
+                            .filter(resolver -> resolver instanceof GroupResolver)
+                            .map(resolver -> (GroupResolver) resolver)
+                            .collect(Collectors.toList());
+
+                    final List<ExtensionResolver> extensionResolvers = Arrays.stream(resolvers)
+                            .filter(resolver -> resolver instanceof ExtensionResolver)
+                            .map(resolver -> (ExtensionResolver) resolver)
+                            .collect(Collectors.toList());
+
+                    final Concierge concierge = new Concierge(groupResolvers, extensionResolvers);
+                    Concierge.active = true;
+                    return concierge;
+                }
+                throw new IllegalStateException("server is already running in context");
+            }
+        }
+
     }
 }

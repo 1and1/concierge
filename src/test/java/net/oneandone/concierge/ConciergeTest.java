@@ -1,13 +1,15 @@
 package net.oneandone.concierge;
 
+import net.oneandone.concierge.demo.resolver.PostResolver;
+import net.oneandone.concierge.demo.resolver.UserResolver;
+import org.testng.annotations.Test;
+
 public class ConciergeTest {
 
-    //Test doesn't work on CI as port is in use (sometimes?) and therefore spark doesn't start, while old jersey server did.
-   /* @Test(timeOut = 15000L)
+    @Test(timeOut = 15000L)
     public void testStartAndStop() throws Exception {
-        final URL configurationURL = ClassLoader.getSystemResource("server.json");
-        final Concierge server = Concierge.start(configurationURL);
+        final Concierge server = Concierge.prepare().port(8080).start(new UserResolver(), new PostResolver());
         server.stop();
-    }*/
+    }
 
 }

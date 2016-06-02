@@ -1,8 +1,16 @@
 package net.oneandone.concierge.example;
 
 import net.oneandone.concierge.Concierge;
+import net.oneandone.concierge.api.resolver.ExtensionResolver;
+import net.oneandone.concierge.api.resolver.GroupResolver;
+import net.oneandone.concierge.api.resolver.Resolver;
+import net.oneandone.concierge.example.resolver.AuthorResolver;
+import net.oneandone.concierge.example.resolver.BookRatingExtensionResolver;
+import net.oneandone.concierge.example.resolver.BookResolver;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -17,8 +25,10 @@ public class Main {
      * @throws Exception thrown if execution of server failed
      */
     public static void main(final String... args) throws Exception {
-        final URL configurationURL = ClassLoader.getSystemResource("server.json");
-        Concierge.start(configurationURL);
+        final Resolver[] resolvers = new Resolver[] {
+                new AuthorResolver(), new BookResolver(), new BookRatingExtensionResolver()
+        };
+        Concierge.prepare().port(8080).start(resolvers);
     }
 
 }

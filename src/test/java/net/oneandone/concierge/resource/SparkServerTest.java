@@ -1,7 +1,8 @@
 package net.oneandone.concierge.resource;
 
 import net.oneandone.concierge.JsonHelper;
-import net.oneandone.concierge.configuration.Resolvers;
+import net.oneandone.concierge.api.resolver.ExtensionResolver;
+import net.oneandone.concierge.api.resolver.GroupResolver;
 import net.oneandone.concierge.demo.resolver.PostResolver;
 import net.oneandone.concierge.demo.resolver.UserProfileExtensionResolver;
 import net.oneandone.concierge.demo.resolver.UserResolver;
@@ -21,28 +22,26 @@ import java.util.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+
 public class SparkServerTest {
 
-    private static SparkServer apiResource;
+    private static GenericApiResource apiResource;
 
-    @Mock
-    private Request request;
-    @Mock
-    private Response response;
-    @Mock
-    private QueryParamsMap queryMap;
+    @Mock private Request request;
+    @Mock private Response response;
+    @Mock private QueryParamsMap queryMap;
 
     @BeforeClass
     public static void setUpApiResource() {
-        final List<String> extensionResolvers = new ArrayList<>();
-        final List<String> groupResolvers = new ArrayList<>();
+        final List<ExtensionResolver> extensionResolvers = new ArrayList<>();
+        final List<GroupResolver> groupResolvers = new ArrayList<>();
 
-        groupResolvers.add(UserResolver.class.getCanonicalName());
-        groupResolvers.add(PostResolver.class.getCanonicalName());
+        groupResolvers.add(new UserResolver());
+        groupResolvers.add(new PostResolver());
 
-        extensionResolvers.add(UserProfileExtensionResolver.class.getCanonicalName());
+        extensionResolvers.add(new UserProfileExtensionResolver());
 
-        apiResource = new SparkServer(new Resolvers(groupResolvers, extensionResolvers), 8080);
+        apiResource = new GenericApiResource(groupResolvers, extensionResolvers);
     }
 
     @BeforeMethod(alwaysRun=true)
