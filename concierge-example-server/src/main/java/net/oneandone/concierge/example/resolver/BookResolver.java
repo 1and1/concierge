@@ -24,7 +24,7 @@ public class BookResolver extends BasicGroupResolver {
 
     @Override
     public String[] hierarchy() {
-        return new String[] { "authors", "books" };
+        return new String[]{"authors", "books"};
     }
 
     @Override
