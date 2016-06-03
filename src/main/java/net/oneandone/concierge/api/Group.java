@@ -18,6 +18,8 @@ public class Group implements Addressable {
     private final int total;
     private final ZonedDateTime lastModified;
 
+    /* ********** EMPTY GROUP **********************************************************/
+
     /**
      * Returns an empty group.
      *
@@ -27,6 +29,8 @@ public class Group implements Addressable {
     public static Group empty(final String name) {
         return new EmptyGroup(name);
     }
+
+    /* ********** SINGLE ELEMENT GROUP *************************************************/
 
     /**
      * Returns a result containing only one unique element, as the result of a query with an {@link net.oneandone.concierge.api.filter.AddressFilter}.
@@ -38,6 +42,8 @@ public class Group implements Addressable {
         Preconditions.checkNotNull(element, "the element may not be null");
         return new SingleElementGroup(element);
     }
+
+    /* ********** MULTI ELEMENT GROUP **************************************************/
 
     /**
      * Returns a multi element group.
@@ -62,8 +68,6 @@ public class Group implements Addressable {
         return elements;
     }
 
-    /* ********** EMPTY GROUP **********************************************************/
-
     /**
      * Returns the total number of elements for this group.
      * <p/>
@@ -80,7 +84,6 @@ public class Group implements Addressable {
         return address;
     }
 
-    /* ********** SINGLE ELEMENT GROUP *************************************************/
 
     @Override
     public ZonedDateTime lastModified() {
@@ -92,8 +95,6 @@ public class Group implements Addressable {
             super(address, Collections.emptyList(), 0, ZonedDateTime.now());
         }
     }
-
-    /* ********** MULTI ELEMENT GROUP **************************************************/
 
     static class SingleElementGroup extends Group {
         SingleElementGroup(final Element element) {
