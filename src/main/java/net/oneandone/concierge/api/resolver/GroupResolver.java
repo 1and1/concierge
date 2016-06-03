@@ -24,7 +24,7 @@ public interface GroupResolver extends Resolver {
     /**
      * Returns the group.
      *
-     * @param parent the parent element
+     * @param parent  the parent element
      * @param filters the list of filters
      * @return the group
      */

@@ -15,6 +15,6 @@ public class BookRatingExtensionResolver implements ExtensionResolver {
 
     @Override
     public String[] hierarchy() {
-        return new String[] { "authors", "books", "rating" };
+        return new String[]{"authors", "books", "rating"};
     }
 }

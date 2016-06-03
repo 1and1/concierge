@@ -23,7 +23,7 @@ public class AuthorResolver extends BasicGroupResolver {
 
     @Override
     public String[] hierarchy() {
-        return new String[] { "authors" };
+        return new String[]{"authors"};
     }
 
     @Override
@@ -44,8 +44,7 @@ public class AuthorResolver extends BasicGroupResolver {
     @Override
     public List<Element> elements(final Element parent, final int page, final int perPage, final Filters filters) {
         final int skip = (page - 1) * perPage;
-        final int limit = perPage;
-        return Library.getAuthors().stream().skip(skip).limit(limit).collect(Collectors.toList());
+        return Library.getAuthors().stream().skip(skip).limit(perPage).collect(Collectors.toList());
     }
 
 }

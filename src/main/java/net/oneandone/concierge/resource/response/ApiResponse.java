@@ -1,12 +1,13 @@
 package net.oneandone.concierge.resource.response;
 
 import lombok.Getter;
+import spark.Response;
 
 import javax.json.JsonStructure;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-public class ApiResponse {
+public class ApiResponse extends Response {
 
     @Getter private JsonStructure object;
     @Getter private ZonedDateTime lastModified;

@@ -1,15 +1,14 @@
 package net.oneandone.concierge;
 
+import net.oneandone.concierge.demo.resolver.PostResolver;
+import net.oneandone.concierge.demo.resolver.UserResolver;
 import org.testng.annotations.Test;
-
-import java.net.URL;
 
 public class ConciergeTest {
 
     @Test(timeOut = 15000L)
     public void testStartAndStop() throws Exception {
-        final URL configurationURL = ClassLoader.getSystemResource("server.yml");
-        final Concierge server = Concierge.start(configurationURL);
+        final Concierge server = Concierge.prepare().port(8080).start(new UserResolver(), new PostResolver());
         server.stop();
     }
 
